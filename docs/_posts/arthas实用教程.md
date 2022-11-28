@@ -1,3 +1,10 @@
+---
+layout: post
+title:  "arthas实用教程"
+date:   2022-11-28 14:05:31 +0800
+categories: debug
+---
+
 # arthas实用教程
 
 ## arthas安装
