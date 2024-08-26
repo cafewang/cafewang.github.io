@@ -30,9 +30,12 @@ twitter_username: jekyllrb
 github_username:  cafewang
 
 # Build settings
-theme: minima
+theme: minimal-mistakes-jekyll
 plugins:
   - jekyll-feed
+
+# Google Analytics
+google_analytics: G-JZSKRKC67Z
 
 # Exclude from processing.
 # The following items will not be processed, by default.
