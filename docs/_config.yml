@@ -30,9 +30,9 @@ twitter_username: jekyllrb
 github_username:  cafewang
 
 # Build settings
-theme: minimal-mistakes-jekyll
+remote_theme: "mmistakes/minimal-mistakes@4.26.2"
 plugins:
-  - jekyll-feed
+  - jekyll-include-cache
 
 # Google Analytics
 google_analytics: G-JZSKRKC67Z
