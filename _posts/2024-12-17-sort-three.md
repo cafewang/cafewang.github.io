@@ -57,7 +57,8 @@ categories: algorithm sort 算法 排序
 + 首先进行对数据划分操作，[<font color="brown">1, 3, 2</font>, 3, <font color="light-blue">4, 5, 4</font>]，将数组分为`小于等于轴`、`轴`、`大于轴`三部分
 + 对`小于等于轴`和`大于轴`这两部分再进行递归排序
 下面通过实例演示
-<pre class="mermaid">
+  
+```mermaid
 graph TD 
 A["[3, 5, 2, 4, 1, 3, 4]"]
 B["[1, 3, 2]"]
@@ -67,9 +68,11 @@ D["[4, 5, 4]"]
 A --> B
 A --> C
 A --> D
-</pre>
+```
 
-<pre class="mermaid">
+```mermaid
+
+
 graph TD 
 A["[3, 5, 2, 4, 1, 3, 4]"]
 B["[1, 3, 2]"]
@@ -83,9 +86,10 @@ B --> F
 B --> E
 A --> C
 A --> D
-</pre>
+```
 
-<pre class="mermaid">
+```mermaid
+
 graph TD 
 A["[3, 5, 2, 4, 1, 3, 4]"]
 B["[1, 3, 2]"]
@@ -103,9 +107,9 @@ A --> C
 A --> D
 F --> G
 F --> H
-</pre>
+```
 
-<pre class="mermaid">
+```mermaid
 graph TD 
 A["[3, 5, 2, 4, 1, 3, 4]"]
 B["[1, 3, 2]"]
@@ -129,7 +133,7 @@ F --> H
 D --> I
 D --> J
 D --> K
-</pre>
+```
 
 接下来贴出代码
 ```java
