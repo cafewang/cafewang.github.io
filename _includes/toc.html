@@ -1,6 +1,8 @@
 <script src="https://unpkg.com/scrollnav@3.0.1/dist/scrollnav.min.umd.js"></script>
 <script>
     const content = document.querySelector('.page');
-    scrollnav.init(content);
+    scrollnav.init(content, {
+        subSections: 'h3'
+    });
 </script>
 <link rel="stylesheet" href="/assets/css/toc.css"/>
