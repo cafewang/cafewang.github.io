@@ -4,13 +4,18 @@ body{
 
 .scroll-nav {
   background-color: #f8f9fa;
-  border: 1px solid #a2a9b1;
-  padding: 15px 10px;
-  width: calc(20%);
+    border: 1px solid #a2a9b1;
+    padding: 15px 10px;
+    top: 10px;
 
-  display: inline-flex;
-  position: sticky;
-  top: 10px;
+    @media screen and (min-width: 1024px) {
+      padding: 15px 10px;
+
+      top: 60px;
+      width: 180px;
+      display: inline-flex;
+      position: sticky;
+    }
 }
 
 .scroll-nav__list {
@@ -47,4 +52,9 @@ body{
   //display: block;
   //margin: 0 auto;
   //padding-left: 42px;
+}
+
+.page {
+  @media screen and (min-width: 700px) {
+  }
 }
