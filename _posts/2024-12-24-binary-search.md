@@ -3,7 +3,7 @@ layout: single
 title:  "算法漫谈-二分查找"
 author_profile: false
 date: 2024-12-24 17:30:44 +0800
-categories: algorithm sort 算法 二分查找
+categories: algorithm binary-search 算法 二分查找
 ---
 
 ## 原理
