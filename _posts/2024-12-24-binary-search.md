@@ -1,5 +1,5 @@
 ---
-layout: single
+layout: commented
 title:  "算法漫谈-二分查找"
 author_profile: false
 date: 2024-12-24 17:30:44 +0800
@@ -323,7 +323,3 @@ https://leetcode.cn/problems/find-minimum-in-rotated-sorted-array
 
 ## 结语
 理解二分查找的关键在于理解`二分条件`的作用及使用，希望本文能帮大家拓宽思路，增进功力。
-
-{% include toc.html %}
-{% include mathjax.html %}
-{% include mermaid.html %}

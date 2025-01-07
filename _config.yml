@@ -35,6 +35,11 @@ copyright                : # "copyright" name, defaults to site.title
 copyright_url            : # "copyright" URL, defaults to site.url
 comments:
   provider               : # false (default), "disqus", "discourse", "facebook", "staticman", "staticman_v2", "utterances", "giscus", "custom"
+  gitalk:
+    clientId: "Ov23lieSLNWGeQSxYFnC"
+    clientSecret: "ff5afcc8bbee495d8bd3b57503c135a035b17f70"
+    repo: "blog_comments"
+    github_username: "cafewang"
   disqus:
     shortname            : # https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-
   discourse:

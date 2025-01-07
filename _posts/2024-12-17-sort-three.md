@@ -1,5 +1,5 @@
 ---
-layout: single
+layout: commented
 title:  "排序第二讲-快速排序"
 author_profile: false
 date: 2024-12-17 18:30:44 +0800
@@ -163,7 +163,3 @@ D --> K
 
 ## 结语
 快速排序作为性能优秀、适应性强的排序算法在各种标准库中广泛应用，我们还会继续介绍其他有意思且高性能的排序算法，还请继续跟上脚步。
-
-{% include toc.html %}
-{% include mathjax.html %}
-{% include mermaid.html %}

@@ -1,5 +1,5 @@
 ---
-layout: single
+layout: commented
 title:  "算法漫谈-滑动窗口"
 author_profile: false
 date: 2025-01-05 16:30:44 +0800
@@ -378,7 +378,3 @@ https://leetcode.cn/problems/binary-subarrays-with-sum
 
 ## 结语
 本期的滑动窗口之旅就先滑到这里了，关于数组还有很多有趣实用的内容，我们后续再介绍
-
-{% include toc.html %}
-{% include mathjax.html %}
-{% include mermaid.html %}
