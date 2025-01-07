@@ -9,7 +9,8 @@
         repo: '{{ site.comments.gitalk.repo }}',
         owner: '{{ site.comments.gitalk.github_username }}',
         admin: ['{{ site.comments.gitalk.github_username }}'],
-        distractionFreeMode: false  // Facebook-like distraction free mode
+        distractionFreeMode: false,  // Facebook-like distraction free mode
+        proxy: 'https://remarkable-sfogliatella-7d647e.netlify.app/github_access_token'
     })
     gitalk.render('gitalk-container')
 </script>
