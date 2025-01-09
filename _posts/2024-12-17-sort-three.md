@@ -1,7 +1,5 @@
 ---
-layout: commented
 title:  "排序第二讲-快速排序"
-author_profile: false
 date: 2024-12-17 18:30:44 +0800
 categories: algorithm sort 算法 排序
 ---

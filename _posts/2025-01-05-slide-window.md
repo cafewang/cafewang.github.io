@@ -1,7 +1,5 @@
 ---
-layout: commented
 title:  "算法漫谈-滑动窗口"
-author_profile: false
 date: 2025-01-05 16:30:44 +0800
 categories: algorithm sum 算法 滑动窗口
 ---
