@@ -1,0 +1,18 @@
+@media (min-width: 64em) {
+  .sidebar__right.sticky {
+    float: inline-start;
+  }
+}
+
+@media (min-width: 64em) {
+  .sidebar__right {
+    margin-inline-start: -215px;
+  }
+}
+
+@media (min-width: 80em) {
+  .sidebar__right {
+    margin-inline-end: 0px;
+    margin-inline-start: -320px;
+  }
+}
