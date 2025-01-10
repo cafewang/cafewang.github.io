@@ -330,4 +330,5 @@ defaults:
       related: true
       toc: true
       toc_label: "目录"
+      toc_icon: "bars"
       toc_sticky: true
