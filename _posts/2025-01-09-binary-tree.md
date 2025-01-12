@@ -3,6 +3,7 @@ title:  "算法漫谈-二叉树"
 date: 2025-01-09 21:30:44 +0800
 categories: algorithm sum 算法 二叉树
 ---
+
 这里默认大家已经对二叉树有基本的认识，在这个基础上做一下拓展和巩固。
 ## 表示
 本文沿用力扣中的二叉树节点定义，包含左右节点和整数值
@@ -37,26 +38,31 @@ https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree
 
 如下图，p=5，q=1
 
-```mermaid
+<script type="text/tikz">
+\begin{tikzpicture}[
+level 1/.style = {sibling distance= 120pt},
+level/.style={level distance=70pt, sibling distance=70pt},
+every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
+]
+\node {3} [line width=1pt]
+    child {
+        node {5} edge from parent [green!30,draw]
+        child[black] { node {6}}
+        child[black] {
+            node {2}
+            child {node {7}}
+            child {node {4}}
+        }
+    }   
+    child {
+        node {1} edge from parent [green!30,draw]
+        child[black] {node {0}}
+        child[black] {node {8}}
+    }
+;
+\end{tikzpicture}
+</script>
 
-graph TD 
-A(("3"))
-B(("5"))
-C(("1"))
-D(("6"))
-E(("2"))
-F(("0"))
-G(("8"))
-H(("7"))
-I(("4"))
-
-A --- B & C
-B --- D & E
-C --- F & G
-E --- H & I
-
-linkStyle 0,1 stroke:lightgreen;
-```
 很明显，根节点3是节点5和1的最近公共祖先<br>
 要求解这个问题，我们需要三部分信息
 + 当前节点是不是p或者q
@@ -108,21 +114,28 @@ https://leetcode.cn/problems/binary-tree-right-side-view
 想象站在二叉树右侧向左看，返回从上到下看到的节点值
 ```
 以下树为例
-```mermaid
-graph TD
-A(("1"))
-B(("2"))
-C(("3"))
-D(("4"))
-E(("5"))
 
-A --- B & C
-B --- D
-D --- E
+<script type="text/tikz">
+\begin{tikzpicture}[
+level/.style={level distance=70pt, sibling distance=70pt},
+rightnode/.style={circle, draw=blue!60, fill=teal!20, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
+circlenode/.style={draw=olive, fill=lightgray!20, circle, node font=\large\bfseries, line width=0.5pt, minimum size=12mm},
+]
+\node[rightnode] {1} [line width=1pt]
+    child {
+        node[circlenode] {2}
+        child {
+            node[rightnode] {4}
+            child {
+                node[rightnode] {5}
+            }
+        }
+    }
+    child { node[rightnode] {3} }
+;
+\end{tikzpicture}
+</script>
 
-classDef right fill:lightblue,stroke-width:3px;
-class A,C,D,E right;
-```
 输出为[1,3,4,5]<br>
 这是很典型可以用层次遍历解决的问题<br>
 但我们也可以使用先序遍历+记录层数来解决
@@ -151,6 +164,118 @@ class A,C,D,E right;
 + result仅记录每一层第一个访问的元素
 
 ## 构造
+要唯一表示一个二叉树，可以在遍历中记录空节点
+
+<script type="text/tikz">
+\begin{tikzpicture}[
+level/.style={level distance=70pt, sibling distance=70pt},
+every node/.style={circle, draw=black, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
+]
+\node {1} [line width=1pt]
+    child {node {2}}
+    child{
+        node {3}
+        child {node {4}}
+        child {node {5}}
+    }
+;
+\end{tikzpicture}
+</script>
+
+上述二叉树可以表示成`"1,2,x,x,3,4,x,x,5,x,x"`这个字符串，逗号分隔并且空节点用x表示<br>
+这样就可以序列化/反序列化二叉树
+```java
+// https://leetcode.cn/problems/serialize-and-deserialize-binary-tree/submissions/592468278/
+// Encodes a tree to a single string.
+    public String serialize(TreeNode root) {
+        StringBuilder builder = new StringBuilder();
+        encode(root, builder);
+        return builder.toString();
+    }
+    
+    public void encode(TreeNode root, StringBuilder builder) {
+        if (builder.length() != 0) {
+            builder.append(",");
+        }
+    
+        if (root == null) {
+            builder.append("x");
+            return;
+        }
+    
+        builder.append(String.valueOf(root.val));
+        encode(root.left, builder);
+        encode(root.right, builder);
+    }
+    
+    int idx;
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+        String[] nodeArr = data.split(",");
+        idx = 0;
+        return decode(nodeArr);
+    }
+    
+    public TreeNode decode(String[] nodeArr) {
+        String strVal = nodeArr[idx++];
+        if (strVal.equals("x")) {
+            return null;
+        } else {
+            TreeNode node = new TreeNode(Integer.parseInt(strVal));
+            node.left = decode(nodeArr);
+            node.right = decode(nodeArr);
+            return node;
+        }
+    }
+```
+
+而对于每个节点值都不同的二叉树，还可以通过`前序+中序`或者`后序+中序`来构造<br>
+这里我们只讲解`前序+中序`，仍以下图举例
+
+<script type="text/tikz">
+\begin{tikzpicture}[
+level/.style={level distance=70pt, sibling distance=70pt},
+every node/.style={circle, draw=black, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
+]
+\node {1} [line width=1pt]
+    child {node {2}}
+    child{
+        node {3}
+        child {node {4}}
+        child {node {5}}
+    }
+;
+\end{tikzpicture}
+</script>
+
+前序为`[1,2,3,4,5]`，中序为`[2,1,4,3,5]`
++ 根节点为1,查找在中序中的对应位置，可以分出左右子树[<font color="Salmon">2,</font>1,<font color="green">4,3,5</font>]
++ 再分别递归左右子树，即可组装整颗树
+
+```java
+// https://leetcode.cn/problems/construct-binary-tree-from-preorder-and-inorder-traversal/submissions/592539760
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        Map<Integer, Integer> valToIdx = new HashMap<>();
+        for (int i = 0; i < inorder.length; i++) {
+            valToIdx.put(inorder[i], i);
+        }
+        return build(preorder, inorder, 0, preorder.length, 0, inorder.length, valToIdx);
+    }
+    
+    public TreeNode build(int[] preorder, int[] inorder, int preL, int preR, int inL, int inR, Map<Integer, Integer> valToIdx) {
+        if (preL == preR) {
+            return null;
+        }
+        int v = preorder[preL];
+        int mid = valToIdx.get(v);
+        int leftLen = mid - inL;
+    
+        TreeNode node = new TreeNode(v);
+        node.left = build(preorder, inorder, preL + 1, preL + 1 + leftLen, inL, inL + leftLen, valToIdx);
+        node.right = build(preorder, inorder, preL + 1 +leftLen, preR, inL + leftLen + 1, inR, valToIdx);
+        return node;
+    }
+```
 
 ## 路径
 
