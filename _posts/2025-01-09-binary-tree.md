@@ -38,7 +38,7 @@ https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree
 
 如下图，p=5，q=1
 
-<script type="text/tikz">
+<script defer type="text/tikz">
 \begin{tikzpicture}[
 level 1/.style = {sibling distance= 120pt},
 level/.style={level distance=70pt, sibling distance=70pt},
@@ -115,7 +115,7 @@ https://leetcode.cn/problems/binary-tree-right-side-view
 ```
 以下树为例
 
-<script type="text/tikz">
+ <script defer type="text/tikz">
 \begin{tikzpicture}[
 level/.style={level distance=70pt, sibling distance=70pt},
 rightnode/.style={circle, draw=blue!60, fill=teal!20, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
@@ -166,7 +166,7 @@ circlenode/.style={draw=olive, fill=lightgray!20, circle, node font=\large\bfser
 ## 构造
 要唯一表示一个二叉树，可以在遍历中记录空节点
 
-<script type="text/tikz">
+<script defer type="text/tikz">
 \begin{tikzpicture}[
 level/.style={level distance=70pt, sibling distance=70pt},
 every node/.style={circle, draw=black, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
@@ -232,7 +232,7 @@ every node/.style={circle, draw=black, node font=\large\bfseries, line width=1.5
 而对于每个节点值都不同的二叉树，还可以通过`前序+中序`或者`后序+中序`来构造<br>
 这里我们只讲解`前序+中序`，仍以下图举例
 
-<script type="text/tikz">
+<script defer type="text/tikz">
 \begin{tikzpicture}[
 level/.style={level distance=70pt, sibling distance=70pt},
 every node/.style={circle, draw=black, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
@@ -276,9 +276,152 @@ every node/.style={circle, draw=black, node font=\large\bfseries, line width=1.5
         return node;
     }
 ```
++ 首先用Map记录节点值到中序数组下标的映射，这样查询父节点只需要常数时间
++ 构造时，前序数组的第一个元素为当前子树的根节点，在中序数组中查询到对应元素后，就知道了左右子树在两个数组中的位置，进行递归即可
 
 ## 路径
+首先看一个基础问题
+```text
+给定根节点和表示目标和的整数targetSum，判断该树中是否存在 根节点到叶子节点 的路径，
+这条路径上所有节点值相加等于targetSum
+```
+示例如下
 
+<script defer type="text/tikz">
+\begin{tikzpicture}[
+level 1/.style = {sibling distance= 120pt},
+level/.style={level distance=70pt, sibling distance=70pt},
+every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
+edge from parent/.style={line width=1pt, draw},
+bluenode/.style={fill=teal!20}
+]
+\node[bluenode] {5} 
+    child { node[bluenode] {4}
+        child { node[bluenode] {11}
+            child { node {7}}
+            child { node[bluenode] {2}}
+        }
+    }
+    child { node {8}
+        child { node {13}}
+        child { node {4}}
+    }
+;
+\end{tikzpicture}
+</script>
+
+上图中即存在`5+4+11+2=22`的路径<br>
+要计算根节点到叶子结点的路径和，只需记录从根节点到父节点的路径和即可<br>
+在参数中保存路径和，返回值传递是否已找到符合的路径和
+```java
+// https://leetcode.cn/problems/path-sum/submissions/591770280
+    public boolean hasPathSum(TreeNode root, int targetSum) {
+        return hasPathSum(root, targetSum, 0);
+    }
+
+    public boolean hasPathSum(TreeNode root, int targetSum, int sum) {
+        if (root == null) {
+            return false;
+        }
+
+        if (root.left == null && root.right == null) {
+            return sum + root.val == targetSum;
+        }
+
+        return hasPathSum(root.left, targetSum, sum + root.val ) ||
+        hasPathSum(root.right, targetSum, sum + root.val); 
+    }
+```
+
+### 单向路径和
+现在加大难度
+```text
+给定二叉树和整数targetSum，求二叉树中路径和等于targetSum的路径总数
+路径起点不需要是根节点，终点也不需要是叶子结点，但是方向只能从父节点到子节点
+```
+<script defer type="text/tikz">
+\begin{tikzpicture}[
+level 1/.style = {sibling distance= 120pt},
+level/.style={level distance=70pt, sibling distance=70pt},
+every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
+edge from parent/.style={line width=1pt, draw},
+]
+\node {10} 
+    child { node {5}
+        child { node {3} edge from parent [blue!50]
+            child[black] { node {3}}
+            child[black] { node {-2}}
+        }
+        child { node{2} edge from parent [red!35]
+            child[missing] 
+            child[black] { node {1} edge from parent [red!35] }
+        }
+    }
+    child { node {-3}
+        child[missing]
+        child { node {11} edge from parent [violet!50] }
+    }
+;
+\end{tikzpicture}
+</script>
+图中路径和为8的三条路径已用不同颜色标注<br>
++ 要求出`任意单向路径的和是否等于目标值`需要用到前缀和数组
++ 前缀和数组即从根节点到某一节点过程中，每到一个节点都记录路径和组成的数组
+<script defer type="text/tikz">
+\begin{tikzpicture}[
+level 1/.style = {sibling distance= 120pt},
+level/.style={level distance=70pt, sibling distance=70pt},
+every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
+edge from parent/.style={line width=1pt, draw},
+]
+\node {10} 
+    child { node {5} edge from parent [blue!50]
+        child[black] { node {3} edge from parent [blue!50]
+            child[black] { node {3} edge from parent [blue!50] }
+            child[black] { node {-2}}
+        }
+        child[black] { node{2}
+            child[missing] 
+            child { node {1} }
+        }
+    }
+    child { node {-3}
+        child[missing]
+        child { node {11} }
+    }
+;
+\end{tikzpicture}
+</script>
++ 如上图中的路径，前缀和数组为[10, 15, 18, 21]
++ `10->3`这条路径中的任意一个子路径，都可以由前缀和数组中两个元素的差值表示
++ 比如`18-10=8`就表示`5->3`这条子路径
+
+```java
+// https://leetcode.cn/problems/path-sum-iii/submissions/592980493
+    public int pathSum(TreeNode root, int targetSum) {
+        Map<Long, Integer> prefixSumToCount = new HashMap<>();
+        prefixSumToCount.put(0L, 1);
+        return pathSum(root, targetSum, 0, prefixSumToCount);
+    }
+    
+    public int pathSum(TreeNode root, int targetSum, long sum, Map<Long, Integer> prefixSumToCount) {
+        if (root == null) {
+            return 0;
+        }
+    
+        int v = root.val;
+        int result = prefixSumToCount.getOrDefault(sum + v - targetSum, 0);
+        int count = prefixSumToCount.getOrDefault(sum + v, 0);
+        prefixSumToCount.put(sum + v, count + 1);
+        result += pathSum(root.left, targetSum, sum + v, prefixSumToCount);
+        result += pathSum(root.right, targetSum, sum + v, prefixSumToCount);
+        prefixSumToCount.put(sum + v, count);
+        return result;
+    }
+```
++ 算法中用Map记录了前缀和数组的值及出现的次数
++ 每次都查找最新的前缀和-targetSum是否等于之前的前缀和，有则计入结果
++ Map首先添加0出现1次，是对应前缀和本身而非差值等于目标值的情况
 
 ## 结语
 二叉树是理解递归的绝佳方式，也有助于图和森林的学习，希望本文能以点带面，帮大家拓宽思路、加深理解。
