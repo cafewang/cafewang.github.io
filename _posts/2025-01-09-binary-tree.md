@@ -345,21 +345,22 @@ level 1/.style = {sibling distance= 120pt},
 level/.style={level distance=70pt, sibling distance=70pt},
 every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
 edge from parent/.style={line width=1pt, draw},
+bluenode/.style={fill=teal!20},
 ]
 \node {10} 
-    child { node {5}
-        child { node {3} edge from parent [blue!50]
+    child { node[bluenode] {5}
+        child { node[bluenode] {3} edge from parent [blue!50]
             child[black] { node {3}}
             child[black] { node {-2}}
         }
-        child { node{2} edge from parent [red!35]
+        child { node[bluenode]{2} edge from parent [red!35]
             child[missing] 
-            child[black] { node {1} edge from parent [red!35] }
+            child[black] { node[bluenode] {1} edge from parent [red!35] }
         }
     }
-    child { node {-3}
+    child { node[bluenode] {-3}
         child[missing]
-        child { node {11} edge from parent [violet!50] }
+        child { node[bluenode] {11} edge from parent [violet!50] }
     }
 ;
 \end{tikzpicture}
@@ -373,11 +374,12 @@ level 1/.style = {sibling distance= 120pt},
 level/.style={level distance=70pt, sibling distance=70pt},
 every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
 edge from parent/.style={line width=1pt, draw},
+bluenode/.style={fill=teal!20},
 ]
-\node {10} 
-    child { node {5} edge from parent [blue!50]
-        child[black] { node {3} edge from parent [blue!50]
-            child[black] { node {3} edge from parent [blue!50] }
+\node[bluenode] (a) {10} 
+    child { node[bluenode] (b) {5} edge from parent [blue!50]
+        child[black] { node[bluenode] (c) {3} edge from parent [blue!50]
+            child[black] { node[bluenode] (d) {3} edge from parent [blue!50] }
             child[black] { node {-2}}
         }
         child[black] { node{2}
@@ -422,6 +424,69 @@ edge from parent/.style={line width=1pt, draw},
 + 算法中用Map记录了前缀和数组的值及出现的次数
 + 每次都查找最新的前缀和-targetSum是否等于之前的前缀和，有则计入结果
 + Map首先添加0出现1次，是对应前缀和本身而非差值等于目标值的情况
+
+### 最大路径和
+到这里可以搬出这期最有难度的一个题目了
+```text
+给定一个二叉树，返回其 最大路径和
+路径至少包含一个节点，且同一个节点在一条路径中最多出现一次
+```
+
+<script defer type="text/tikz">
+\begin{tikzpicture}[
+level 1/.style = {sibling distance= 120pt},
+level/.style={level distance=70pt, sibling distance=70pt},
+every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
+edge from parent/.style={line width=1pt, draw},
+bluenode/.style={fill=teal!20},
+]
+\node {-10} 
+    child {node {9}}
+    child {node[bluenode] {20}
+        child {node[bluenode] {15} edge from parent [blue!60]}
+        child {node[bluenode] {7} edge from parent [blue!60]}
+    }
+;
+\end{tikzpicture}
+</script>
+
+上例中的最大路径和如图所示，为`15->20->7=42`<br>
+首先我们下一个推论，二叉树中的路径都有且只有一个深度最小的节点，证明如下
++ 使用反证法，假设路径中至少有两个深度最小的节点
++ 由于二叉树中相邻节点都是父子关系，则路径在这两个节点各自的子树当中
++ 由于两个子树中的路径一定是相连的，则相连的这个节点处在两个子树中
++ 这个相连的节点一定在两个子树中都有父节点，这显然是不可能的
++ 所以结论为`二叉树路径中有且只有一个深度最小的节点`，姑且称为路径的`根节点`
+
+这个根节点将路径分为三个部分，`左子树中的路径`+`根节点`+`右子树中的路径`<br>
+这样我们就可以采用递归的方式，分别求`以左子节点结束的最大路径`和`以右子节点结束的最大路径`<br>
+通过根节点连接，就能求出当前节点作为根节点的最大路径和，遍历所有节点即可得到最大值
+```java
+// https://leetcode.cn/problems/binary-tree-maximum-path-sum/submissions/591819333
+    Integer max;
+    
+    public int maxPathSum(TreeNode root) {
+        max = null;
+        maxSumThroughNode(root);
+        return max;
+    }
+    
+    public int maxSumThroughNode(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+        int leftSum = maxSumThroughNode(root.left);
+        int rightSum = maxSumThroughNode(root.right);
+        if (max == null) {
+            max = root.val + leftSum + rightSum;
+        } else {
+            max = Math.max(max, root.val + leftSum + rightSum);
+        }
+        return Math.max(0, Math.max(leftSum, rightSum) + root.val);
+    }
+```
+> 💡 注意，最后一个语句返回了以根节点结束的最大路径和，即左子树和右子树中较大的路径加上根节点的值，
+> 但这个值可能是负的，这时直接返回0，表示抛弃该路径
 
 ## 结语
 二叉树是理解递归的绝佳方式，也有助于图和森林的学习，希望本文能以点带面，帮大家拓宽思路、加深理解。
