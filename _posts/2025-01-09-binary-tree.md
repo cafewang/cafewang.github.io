@@ -1,7 +1,7 @@
 ---
 title:  "算法漫谈-二叉树"
 date: 2025-01-09 21:30:44 +0800
-categories: algorithm sum 算法 二叉树
+categories: algorithm binary-tree 算法 二叉树
 ---
 
 这里默认大家已经对二叉树有基本的认识，在这个基础上做一下拓展和巩固。
