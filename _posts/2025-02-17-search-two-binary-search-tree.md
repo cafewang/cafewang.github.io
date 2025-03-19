@@ -77,7 +77,7 @@ every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, mi
 ```
 验证二叉搜索树的关键在于检验节点的取值范围
 
-<script defer type="text/tikz">
+<script defer type="text/tikz" data-tikz-libraries="positioning">
 \begin{tikzpicture}[
 level 1/.style = {sibling distance= 120pt},
 level/.style={level distance=70pt, sibling distance=80pt},
@@ -92,11 +92,11 @@ every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, mi
     }
 ;
 
-\node[draw=none] at (a) [right=0.01 of a,font=\small] {$(-\infty\sim+\infty)$};
-\node[draw=none] at (b) [right=0.01 of b,font=\small] {$(-\infty\sim5)$};
-\node[draw=none] at (c) [right=0.01 of c,font=\small] {$(5\sim+\infty)$};
-\node[draw=none] at (d) [right=0.01 of d,font=\small] {$(5\sim7)$};
-\node[draw=none] at (e) [right=0.01 of e,font=\small] {$(7\sim+\infty)$};
+\node[draw=none] at (a) [right=0.01 of a,font=\small] {$(-\infty, +\infty)$};
+\node[draw=none] at (b) [right=0.01 of b,font=\small] {$(-\infty, 5)$};
+\node[draw=none] at (c) [right=0.01 of c,font=\small] {$(5, +\infty)$};
+\node[draw=none] at (d) [right=0.01 of d,font=\small] {$(5, 7)$};
+\node[draw=none] at (e) [right=0.01 of e,font=\small] {$(7, +\infty)$};
 \end{tikzpicture}
 </script>
 
@@ -139,7 +139,7 @@ every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, mi
 
 只和前驱或后继节点交换，能保证二叉搜索树的性质不变，以下图为例，刪除key=5的节点
 
-<script defer type="text/tikz">
+<script defer type="text/tikz" data-tikz-libraries="positioning">
 \begin{tikzpicture}[
 level 1/.style = {sibling distance= 120pt},
 level/.style={level distance=70pt, sibling distance=80pt},

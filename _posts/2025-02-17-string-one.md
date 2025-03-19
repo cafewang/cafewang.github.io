@@ -84,7 +84,7 @@ categories: algorithm string 算法 字符串
 下面介绍三向字符串快速排序，假设数组为["bc", "a", "dq", "bm"]  
 如图我们每次将数组分为三组，以第一个元素的第一个字符划分，为空则以最小字符表示
 
-<script defer type="text/tikz">
+<script defer type="text/tikz" data-tikz-libraries="fit">
 \begin{tikzpicture}[
 every node/.style={node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
 ]

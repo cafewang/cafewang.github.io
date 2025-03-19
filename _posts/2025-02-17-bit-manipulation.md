@@ -21,7 +21,6 @@ categories: algorithm bit-manipulation 算法 位运算
 
 以8位表示的数字65为例，最高位1代表的数字是64
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -66,7 +65,6 @@ blue node/.style={fill=aliceblue},
 
 \end{tikzpicture}
 </script>
-</div>
 
 这种方法是通过倍增的方式将最高位1复制到后续每一位，然后减法去掉非最高位的一。
 
@@ -81,7 +79,6 @@ blue node/.style={fill=aliceblue},
 这样最低位一和后续位i和-i是一样的，而前面都是相反的，与操作后就保留了最低位一和后续的零。
 以八位表示的8举例。
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -112,7 +109,6 @@ blue node/.style={fill=aliceblue},
 
 \end{tikzpicture}
 </script>
-</div>
 
 
 ### 前导零个数
@@ -145,7 +141,6 @@ public static int numberOfLeadingZeros(int i) {
 是不是看起来一头雾水？让我们用八位表示的27(11011)举例  
 首先是`(i >>> 1) & 0x55555555`，5用二进制表示就是`0101`，整句的意思就是将二进制每两位分组，保留第二位。
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -177,7 +172,6 @@ blue node/.style={fill=aliceblue},
 
 \end{tikzpicture}
 </script>
-</div>
 
 那么`i - ((i >>> 1) & 0x55555555)`又是什么意思呢？可以按照下图理解
 
@@ -189,7 +183,6 @@ blue node/.style={fill=aliceblue},
 可以看到每两位恰好变为表示这两位上1的个数。  
 继续看`(i & 0x33333333) + ((i >>> 2) & 0x33333333)`
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -233,13 +226,11 @@ brass node/.style={fill=almond},
 
 \end{tikzpicture}
 </script>
-</div>
 
 结果就是将每两位的一的个数相加成每四位的一的个数。  
 `(i + (i >>> 4)) & 0x0f0f0f0f`就是将每四位的一的个数相加成每八位一的个数，接下来就是相加成十六位和三十二位。  
 最后`i & 0x3f`就是保留最后6位，因为最多32个一，二进制最多6位。可以看到最终得到的4就是27(11011)中一的个数。
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -273,7 +264,6 @@ gold node/.style={fill=satinsheengold},
 
 \end{tikzpicture}
 </script>
-</div>
 
 ### 反转
 ```java
@@ -292,7 +282,6 @@ gold node/.style={fill=satinsheengold},
 或操作之后就是将每两位的高低位互换，后续就是将每四位的前后两位互换，然后将每八位的前后四位互换，  
 整体结果就是每八位被分别反转，最后再将四个八位反转，就完成了三十二位的反转。
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -333,7 +322,6 @@ gold node/.style={fill=amber},
 
 \end{tikzpicture}
 </script>
-</div>
 
 ## 应用
 ### 只出现一次的数字
@@ -396,7 +384,6 @@ gold node/.style={fill=amber},
 输出：4
 ```
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -430,7 +417,6 @@ gold node/.style={fill=amber},
 
 \end{tikzpicture}
 </script>
-</div>
 
 这里不加证明地说，[left,right]的范围按位与，就是left和right二进制公共前缀拼接上零组成的，  
 比如[5,7]按位与就是前缀`01`拼接两个0，组成了`0100`就是4。  
@@ -462,7 +448,6 @@ gold node/.style={fill=amber},
 以四位二进制的[5,7,3]为例。  
 首先找最高位是否有一个零和一个一，这样异或结果就是一，显然没找到，这一位只能设为零。
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -496,11 +481,9 @@ gold node/.style={fill=amber},
 
 \end{tikzpicture}
 </script>
-</div>
 
 再找是否有两个数的最高两位异或结果为`01`，比如`00`和`01`，显然存在这样的数，所以前两位设置为`01`。
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -538,11 +521,9 @@ gold node/.style={fill=amber},
 
 \end{tikzpicture}
 </script>
-</div>
 
 接下来找最高三位异或结果为`011`的两个数，也能找到，结果的最高三位设为`011`。
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -579,11 +560,9 @@ gold node/.style={fill=amber},
 \draw[ceil, line width=2pt] (0,-2) rectangle (3,-1);
 \end{tikzpicture}
 </script>
-</div>
 
 最后找异或结果为`0111`的两个数，找不到这样的数，所以最终结果为`0110`，即6。
 
-<div class="tikzjax">
 <script defer type="text/tikz">
 \definecolor{ashgrey}{rgb}{0.7, 0.75, 0.71}
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
@@ -620,7 +599,6 @@ gold node/.style={fill=amber},
 \draw[ceil, line width=2pt] (0,-2) rectangle (4,-1);
 \end{tikzpicture}
 </script>
-</div>
 
 ```java
 // https://leetcode.cn/problems/ms70jA/submissions/611441385

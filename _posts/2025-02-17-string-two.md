@@ -127,7 +127,7 @@ every node/.style={circle, draw, node font=\large\bfseries, line width=1.5pt, mi
 + 优先队列长度大于一时，取出词频最小的两个节点，创建非叶子节点作为两个节点的父节点，词频设置为两者之和，将父节点入队
 + 优先队列只剩一个节点时，将该节点作为哈夫曼树的根节点
 
-<script defer type="text/tikz">
+<script defer type="text/tikz" data-tikz-libraries="positioning">
 \begin{tikzpicture}[
 level 1/.style = {sibling distance= 120pt},
 level/.style={level distance=70pt, sibling distance=80pt},
