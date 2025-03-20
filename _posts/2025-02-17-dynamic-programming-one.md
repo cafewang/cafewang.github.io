@@ -107,7 +107,7 @@ $$
 2. 将最大的圆盘从A移到C上
 3. 将n-1个圆盘从B移到C上
 
-<script defer type="text/tikz">
+<script defer type="text/tikz" data-tikz-libraries="positioning,shapes.arrows,fit">
 \begin{tikzpicture}[
 every node/.style={node font=\large\bfseries, line width=1.5pt, minimum size=12mm},
 ]
