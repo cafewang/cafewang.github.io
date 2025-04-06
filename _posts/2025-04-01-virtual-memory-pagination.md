@@ -267,7 +267,7 @@ blue node/.style={fill=airforceblue},
 但是访问内存时，二级页表需要先查页目录项的PFN，再找到子页的PFN，最后才能访问到真正的物理地址，比普通页表还多一次内存访问。
 
 ### 测试
-在测试类``中，验证了如下场景：
+在测试类`MultiLevelPageTableTest`中，验证了如下场景：
 + 初始状态下所有页目录项都为invalid
 + 无法访问页目录项为invalid的页
 + 无法访问页目录为valid，但是为invalid的子页。
