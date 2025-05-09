@@ -1,8 +1,8 @@
 ---
 title:  "Sagas深度解析-介绍"
-date: 2025-04-15 16:39:00 +0800
+date: 2025-04-26 16:39:00 +0800
 permalink: /microservices/sagas/intro
-categories: microservices sagas
+categories: [microservices, sagas]
 ---
 
 本文以`微服务设计模式`书中的demo项目`ftgo-application`为例，讲解sagas模式在微服务架构中的具体实现。  

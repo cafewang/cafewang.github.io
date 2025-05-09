@@ -2,7 +2,7 @@
 title:  "JVM问题排查"
 date: 2025-04-15 16:39:00 +0800
 permalink: /jvm-in-depth/jvm-trouble-shooting
-categories: jvm trouble-shooting
+categories: [jvm, trouble-shooting]
 ---
 
 jvm相关的问题通常是很难遇到的，因此积累排查问题的经验并不容易，但是我们可以借鉴他人的排查案例，来总结排查的流程和方法。

@@ -2,7 +2,7 @@
 title:  "SSO实战"
 date: 2025-04-15 16:39:00 +0800
 permalink: /security/sso-in-action
-categories: sso security
+categories: [sso, security]
 ---
 说出来可能让人意外，登录系统可能是最复杂的系统之一，并不是看起来的`注册`、`登录`、`退出`这么简单。  
 列举一下登录系统中涉及的重要问题：
