@@ -8,13 +8,13 @@ redis是比较适合学习的开源框架，而调试又是研究源码最佳的
 
 ## 环境准备
 + 使用主机为win10，安装vscode作为IDE
-+ 安装WSL，参考[文档]`https://learn.microsoft.com/zh-cn/windows/wsl/install` ，安装`Ubuntu 20.04.6 LTS`系统
++ 安装WSL，参考[文档](https://learn.microsoft.com/zh-cn/windows/wsl/install)，安装`Ubuntu 20.04.6 LTS`系统
 + 登录WSL系统，克隆项目`https://github.com/cafewang/redis-deep-dive` 
-+ 在项目的`redis-8.0.0`目录下安装redis，参考[文档]`https://redis.io/docs/latest/operate/oss_and_stack/install/build-stack/ubuntu-focal/`
++ 在项目的`redis-8.0.0`目录下安装redis，参考[文档](https://redis.io/docs/latest/operate/oss_and_stack/install/build-stack/ubuntu-focal/)
   + 在项目的根目录下解压`redis-8.0.0.tar.gz`文件
   + 执行make时添加`noopt`选项，更适合调试
   + 执行make时，添加`-k -d`选项，显示更多信息，便于排查安装问题
-+ 在项目的`shunit2-2.1.8`目录下安装shunit2，参考[文档]`https://github.com/kward/shunit2` ，用于运行测试
++ 在项目的`shunit2-2.1.8`目录下安装shunit2，参考[文档](https://github.com/kward/shunit2) ，用于运行测试
   + 在项目的根目录下解压`shunit2-2.1.8.tar.gz`文件
 + 在项目根目录下运行`code .`，启动vscode（运行在ubuntu系统上，可以执行make、gcc等命令）
 + 创建调试配置文件`.vscode/launch.json`
