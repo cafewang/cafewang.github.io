@@ -58,3 +58,17 @@ height="200px"
 src="https://onecompiler.com/embed/c/442ss6skn?hideLanguageSelection=true&hideNew=true&hideNewFileOption=true&disableCopyPaste=true&disableAutoComplete=true&hideStdin=true&hideEditorOptions=true"
 width="100%">
 </iframe>
+
+## 命令行
+如下程序从命令行接收命令，fork子进程，并使用execlp执行，父进程使用waitpid等待子进程结束。  
+fork执行了3次，打印了3个子进程pid。
++ 第一次执行ls，打印目录下文件列表
++ 第二次执行date，打印当前时间
++ 第三次执行notacommand，命令不存在，错误退出
+
+<iframe
+frameBorder="0"
+height="200px"
+src="https://onecompiler.com/embed/c/443p36tgf?hideLanguageSelection=true&hideNew=true&hideNewFileOption=true&disableCopyPaste=true&disableAutoComplete=true&hideStdin=false&hideEditorOptions=true"
+width="100%">
+</iframe>
