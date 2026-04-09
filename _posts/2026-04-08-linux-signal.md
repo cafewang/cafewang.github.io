@@ -56,7 +56,7 @@ width="100%">
 ### 信号携带数据
 <iframe
 frameBorder="0"
-height="850px"
+height="980px"
 scrolling="no"
 src="https://onecompiler.com/embed/c/44jrvwn5z?hideLanguageSelection=true&hideNew=true&hideNewFileOption=true&disableCopyPaste=true&disableAutoComplete=true&hideStdin=true&hideEditorOptions=true"
 width="100%">
@@ -65,13 +65,70 @@ width="100%">
 **代码说明**：
 2. 使用 `sigaction()` 注册信号处理函数，设置 `SA_SIGINFO` 标志以启用扩展信息
 2. 信号处理函数签名为 `void handler(int sig, siginfo_t *info, void *context)`，其中 `info->si_value` 包含发送的数据
-3. 主进程通过 `sigqueue()` 发送两个不同的整数值给子进程
-4. 子进程接收到信号后，从 `siginfo_t` 结构中提取数据并打印
-
-需要注意的是，仅实时信号支持携带数据，标准信号不支持，而且携带的数据可以是整数，还可以是指针，指向信号处理函数能访问到的数据
+3. 主进程通过 `sigqueue()` 发送两次信号`SIGRTMIN`给子进程，注意，只有实时信号可以携带数据
+4. 子进程接收到信号后，从 `siginfo_t` 结构中提取数据并打印，第一次打印数字，第二次打印传递的指针数据
 
 ## 信号阻塞和队列
+同种信号多次发送时，我们看一看两类信号的表现
 
+<iframe
+frameBorder="0"
+height="500px"
+scrolling="no"
+src="https://onecompiler.com/embed/c/44jumtr9s?hideLanguageSelection=true&hideNew=true&hideNewFileOption=true&disableCopyPaste=true&disableAutoComplete=true&hideStdin=true&hideEditorOptions=true"
+width="100%">
+</iframe>
+
+可以看到，两类信号都会按顺序被处理  
+为了屏蔽或延迟信号的处理，我们可以使用`sigprocmask`或`pthread_sigmask`来阻塞信号
+
+<iframe
+frameBorder="0"
+height="450px"
+scrolling="no"
+src="https://onecompiler.com/embed/c/44jung893?hideLanguageSelection=true&hideNew=true&hideNewFileOption=true&disableCopyPaste=true&disableAutoComplete=true&hideStdin=true&hideEditorOptions=true"
+width="100%">
+</iframe>
+
+**代码说明**：
+1. sigset_t是存储阻塞信号集合的结构，可以理解为一个bitmap，每位代表一种信号，通过`sigemptyset`、`sigaddset`等方法来操作
+2. `sigprocmask`可以设置当前进程的阻塞信号集合，`SIG_BLOCK`表示在原有阻塞信号中加入新的信号，`SIG_UNBLOCK`表示解除阻塞，`SIG_SETMASK`表示设置新的阻塞信号集合
+3. 可以看到，`SIGUSR1`在解除阻塞后才开始执行
+
+如果多个同种信号在阻塞过程中被发送，那么信号会被怎样处理呢？
+
+<iframe
+frameBorder="0"
+height="800px"
+scrolling="no"
+src="https://onecompiler.com/embed/c/44juq4nbe?hideLanguageSelection=true&hideNew=true&hideNewFileOption=true&disableCopyPaste=true&disableAutoComplete=true&hideStdin=true&hideEditorOptions=true"
+width="100%">
+</iframe>
+
+标准信号在阻塞期间多次接收，只会保留最后一个信号，所以只处理了一次  
+而实时信号会按照顺序处理，所以会打印3次  
+如果两种信号同时解除阻塞，谁会优先执行呢？根据man手册，我们得到如下解释
+1. 如果两类信号同时发送，Linux系统中一般优先处理标准信号
+2. 如果多种标准信号同时发送，处理顺序标准中没有指定
+3. 如果多种实时信号同时发送，处理顺序是按照数字小的优先级高
+
+在多线程中，子线程会继承父线程的sigmask，发送给进程的信号会选择任意一个没有阻塞信号的线程。  
+通常，我们使用如下方式在多线程中处理信号
+
+<iframe
+frameBorder="0"
+height="1200px"
+scrolling="no"
+src="https://onecompiler.com/embed/c/44jusa4jq?hideLanguageSelection=true&hideNew=true&hideNewFileOption=true&disableCopyPaste=true&disableAutoComplete=true&hideStdin=true&hideEditorOptions=true"
+width="100%">
+</iframe>
+
+**代码说明**：
+1. **主线程设置信号掩码**：在创建子线程前，使用 `pthread_sigmask()` 阻塞 `SIGUSR1` 和 `SIGUSR2`，这样子线程会继承这个阻塞状态
+2. **pthread_barrier**：用来同步主子线程，确保子线程启动后才发送信号，避免信号丢失
+2. **专用信号处理线程**：`signal_handler_thread` 函数使用 `sigwait()` 同步等待信号，这是一种线程安全的信号处理方式
+4. **信号发送**：主线程使用 `kill()` 向整个进程发送信号，由于只有信号处理线程未阻塞这些信号，所以由它来接收和处理
+5. **sigwait() 的优势**：相比异步信号处理函数，`sigwait()` 是同步的，可以在普通代码中安全调用，避免了信号处理函数的诸多限制（如不能调用非异步信号安全的函数）
 
 ## 信号处理
 
