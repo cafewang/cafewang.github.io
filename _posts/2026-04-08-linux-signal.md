@@ -131,5 +131,50 @@ width="100%">
 5. **sigwait() 的优势**：相比异步信号处理函数，`sigwait()` 是同步的，可以在普通代码中安全调用，避免了信号处理函数的诸多限制（如不能调用非异步信号安全的函数）
 
 ## 信号处理
+下面介绍信号处理的过程
+1. 系统从内核态进入到用户态前（一般是系统调用结束后，或CPU时间片调度到某个进程），检查未处理的信号，如果有，按照上文中的优先级进行处理
+2. 未设置处理函数，则按照默认方式处理，实时信号默认会让进程退出
+3. 如果设置了处理函数，则进行如下步骤，注意`SIGKILL`和`SIGSTOP`设置处理函数无效
+   4. 系统首先在用户空间栈中新建栈帧，保存运行前的状态，比如寄存器、sigmask等
+   5. 系统设置后续执行进入信号处理函数的入口，处理函数返回后调用`sigreturn`，这个函数负责恢复运行状态，然后跳转回代码原来的执行位置
+6. 系统回到用户态，执行完处理函数后，执行`sigreturn`返回内核态，执行完后回到用户态，继续执行用户态代码
 
+```mermaid
+sequenceDiagram
+    participant User as 用户程序
+    participant Kernel as 内核
+    
+    Note over User,Kernel: 正常运行阶段
+    User->>User: 执行用户代码
+    
+    Note over User,Kernel: 进入内核态(系统调用/时间片调度)
+    User->>Kernel: 陷入内核态
+    
+    Kernel->>Kernel: 检查未处理信号
+    
+    alt 无未处理信号
+        Kernel-->>User: 返回用户态
+        User->>User: 继续执行
+    else 有未处理信号且未设置处理函数
+        Kernel->>Kernel: 按默认方式处理
+        Kernel-->>User: 进程退出、进程暂停，或忽略信号
+    else 有未处理信号且已设置处理函数
+        Kernel->>Kernel: 在用户栈创建栈帧<br/>保存寄存器、sigmask等
+        Kernel->>Kernel: 设置返回入口为sigreturn
+        
+        Note over User,Kernel: 切换到用户态执行处理函数
+        Kernel-->>User: 跳转到信号处理函数
+        
+        User->>User: 执行信号处理函数
+        User->>Kernel: 调用sigreturn(进入内核态)
+        
+        Kernel->>Kernel: 恢复运行状态<br/>(寄存器、sigmask等)
+        
+        Note over User,Kernel: 返回原执行位置
+        Kernel-->>User: 切换回用户态
+        User->>User: 从断点继续执行
+    end
+```
+
+关于信号还有许多内容可以讨论，比如信号安全(信号处理函数怎样才能安全处理信号)、系统调用中信号的使用等，后续也许会新开篇目来介绍。
 
