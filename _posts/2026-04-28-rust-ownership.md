@@ -19,7 +19,7 @@ frameBorder="0"
 height="350px"
 scrolling="no"
 src="https://onecompiler.com/embed/c/44mq8gcx7?hideLanguageSelection=true&hideNew=true&hideNewFileOption=true&disableCopyPaste=true&disableAutoComplete=true&hideStdin=true&hideEditorOptions=true"
-width="100%">
+width="800px">
 </iframe>
 
 ## Move
