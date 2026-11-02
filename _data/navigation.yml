@@ -1,0 +1,6 @@
+# 顶部导航标签页（minimal-mistakes 只读取 site.data.navigation.main）
+main:
+  - title: "首页"
+    url: "/"
+  - title: "词典"
+    url: "/dictionary/"

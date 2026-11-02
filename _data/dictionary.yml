@@ -1,0 +1,18 @@
+# 词典词条数据库 —— 由你维护
+# 每个词条包含：title（标题）、content（内容）、tags（标签，数组）
+# 新增词条：复制下面任意一项，改掉内容即可；搜索时会匹配 title 或 content。
+- title: "API"
+  content: "应用程序编程接口（Application Programming Interface），软件系统之间互相通信、交换数据的一套约定与规范。"
+  tags:
+    - 术语
+    - 编程
+- title: "Bug"
+  content: "导致软件行为偏离预期的任何问题，小到拼写错误，大到系统崩溃。"
+  tags:
+    - 术语
+    - 调试
+- title: "CDN"
+  content: "内容分发网络（Content Delivery Network），将静态资源缓存到离用户更近的节点，从而加快访问速度。"
+  tags:
+    - 网络
+    - 性能
