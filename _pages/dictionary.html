@@ -6,119 +6,19 @@ author_profile: false
 toc: false
 ---
 
-<p>在下方搜索框中输入关键字，可实时筛选标题或内容包含该关键字的词条。</p>
+<p>在下方搜索框中输入关键字，可实时筛选标题包含该关键字的词条。</p>
 
 <div class="dict-search">
-  <input type="search" id="dict-input" placeholder="搜索词条标题或内容…" autocomplete="off" />
-  <p class="dict-hint" id="dict-count"></p>
+  <input type="search" id="dict-input" placeholder="搜索词条标题…" autocomplete="off" />
+  <p class="dict-hint" id="dict-count" aria-live="polite"></p>
   <ul id="dict-results" class="dict-list"></ul>
 </div>
 
-<style>
-  .dict-search { max-width: 760px; margin: 1em 0 2em; }
-  #dict-input {
-    width: 100%; padding: .65em .9em; font-size: 1em;
-    border: 1px solid #d9d3c7; border-radius: 8px; box-sizing: border-box;
-    background: #fff; color: #333;
-  }
-  #dict-input:focus { outline: none; border-color: #b08968; box-shadow: 0 0 0 3px rgba(176,137,104,.15); }
-  .dict-hint { color: #8a8175; font-size: .85em; margin: .5em 0; }
-  .dict-list { list-style: none; padding: 0; margin: 0; }
-  .dict-list li { padding: 1em 0; border-bottom: 1px solid #ece7dd; }
-  .dict-list li:last-child { border-bottom: none; }
-  .dict-title { font-weight: 600; font-size: 1.12em; color: #4a3f35; }
-  .dict-content { margin: .35em 0; line-height: 1.7; color: #555; }
-  .dict-tags { margin-top: .4em; }
-  .dict-tag {
-    display: inline-block; background: #f3efe7; color: #8a7257;
-    font-size: .76em; padding: .18em .65em; border-radius: 999px; margin: 0 .4em .2em 0;
-  }
-  .dict-empty { color: #999; padding: 1em 0; }
-  mark { background: #fff2b8; color: inherit; padding: 0 1px; border-radius: 2px; }
-</style>
+<link rel="stylesheet" href="{{ '/assets/css/dictionary.css' | relative_url }}">
 
 <script>
   // 词条数据由 Jekyll 从 _data/dictionary.yml 注入
-  const DICTIONARY = {{ site.data.dictionary | jsonify }};
-
-  const input   = document.getElementById('dict-input');
-  const results = document.getElementById('dict-results');
-  const count   = document.getElementById('dict-count');
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-
-  function highlight(text, q) {
-    const safe = escapeHtml(text);
-    if (!q) return safe;
-    const idx = text.toLowerCase().indexOf(q.toLowerCase());
-    if (idx === -1) return safe;
-    // 在原始文本上按位置切分，再分别转义，避免破坏 HTML
-    const before = escapeHtml(text.slice(0, idx));
-    const match  = escapeHtml(text.slice(idx, idx + q.length));
-    const after  = escapeHtml(text.slice(idx + q.length));
-    return before + '<mark>' + match + '</mark>' + after;
-  }
-
-  function render(list, q) {
-    results.innerHTML = '';
-    if (!list.length) {
-      const li = document.createElement('li');
-      li.className = 'dict-empty';
-      li.textContent = '没有找到匹配的词条。';
-      results.appendChild(li);
-      count.textContent = '';
-      return;
-    }
-    list.forEach(function (item) {
-      const li = document.createElement('li');
-
-      const title = document.createElement('div');
-      title.className = 'dict-title';
-      title.innerHTML = highlight(item.title || '', q);
-
-      const content = document.createElement('div');
-      content.className = 'dict-content';
-      content.innerHTML = highlight(item.content || '', q);
-
-      li.appendChild(title);
-      li.appendChild(content);
-
-      if (item.tags && item.tags.length) {
-        const tags = document.createElement('div');
-        tags.className = 'dict-tags';
-        item.tags.forEach(function (t) {
-          const span = document.createElement('span');
-          span.className = 'dict-tag';
-          span.textContent = t;
-          tags.appendChild(span);
-        });
-        li.appendChild(tags);
-      }
-      results.appendChild(li);
-    });
-    count.textContent = '共 ' + list.length + ' 条结果';
-  }
-
-  function search(q) {
-    q = (q || '').trim();
-    if (!q) return { list: DICTIONARY.slice(), q: '' };
-    const lower = q.toLowerCase();
-    const list = DICTIONARY.filter(function (item) {
-      return (item.title   || '').toLowerCase().indexOf(lower) !== -1
-          || (item.content || '').toLowerCase().indexOf(lower) !== -1;
-    });
-    return { list: list, q: q };
-  }
-
-  input.addEventListener('input', function () {
-    const r = search(input.value);
-    render(r.list, r.q);
-  });
-
-  // 初始展示全部词条
-  render(DICTIONARY.slice(), '');
+  // 使用 replace 过滤器防止 script 等字符截断脚本
+  window.DICTIONARY_DATA = {{ site.data.dictionary | jsonify | replace: "</", "<\/" }};
 </script>
+<script src="{{ '/assets/js/dictionary.js' | relative_url }}"></script>

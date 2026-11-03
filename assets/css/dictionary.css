@@ -1,0 +1,89 @@
+/* ===== 词典页样式 ===== */
+.dict-search { max-width: 860px; margin: 1em 0 2em; }
+
+#dict-input {
+  width: 100%; padding: .7em 1em; font-size: 1rem;
+  border: 1px solid #d9d3c7; border-radius: 8px; box-sizing: border-box;
+  background: #fff; color: #333;
+}
+#dict-input:focus {
+  outline: none; border-color: #b08968;
+  box-shadow: 0 0 0 3px rgba(176,137,104,.15);
+}
+.dict-hint { color: #8a8175; font-size: .85rem; margin: .5em 0; }
+.dict-list { list-style: none; padding: 0; margin: 0; }
+
+/* 词条整体 */
+.dict-entry { padding: 1em 0; border-bottom: 1px solid #ece7dd; }
+.dict-entry:last-child { border-bottom: none; }
+.dict-entry-title { font-weight: 600; font-size: 1.2rem; color: #4a3f35; }
+
+/* 义项容器 */
+.dict-meaning { margin-top: .6em; }
+
+/* 词性标签行：独立一行，仅显示"动"/"名"/"形"标签 */
+.dict-wordclass-line { margin: .2em 0; }
+.word-class-tag {
+  display: inline-block; font-size: .65rem; font-weight: 600;
+  padding: .1em .45em; border-radius: 999px;
+  vertical-align: middle; line-height: 1;
+}
+.word-class-tag--verb { background: #e8f4ea; color: #2d7d32; }
+.word-class-tag--noun { background: #e3f2fd; color: #1565c0; }
+.word-class-tag--adj  { background: #fce4ec; color: #c2185b; }
+.word-class-tag--other { background: #f3efe7; color: #8a7257; }
+
+/* 释义行：独立一行 */
+.dict-explanation-line { color: #555; line-height: 1.7; margin: .2em 0 .4em; }
+
+/* 书证/援例行容器 */
+.dict-bookrefs-lines { margin-top: .3em; }
+
+/* 单个书证行 */
+.dict-bookref-line {
+  display: block; margin: .25em 0; padding: .2em .4em;
+  font-size: .9rem; color: #5d5348; line-height: 1.6;
+  border-radius: 4px; transition: background .15s;
+  text-decoration: none; cursor: default;
+}
+.dict-bookref-line:hover { background: #faf8f5; }
+.dict-bookref-line--link { cursor: pointer; }
+
+/* "援例"标签 & 占位器 */
+.dict-bookref-label,
+.dict-bookref-label-spacer {
+  display: inline-block; font-size: .65rem; font-weight: 600;
+  width: 3.2em; /* 固定宽度对齐 */
+  vertical-align: middle;
+}
+.dict-bookref-label {
+  background: #fff2b8; color: #8a6d1a; padding: .08em .4em;
+  border-radius: 999px; margin-right: .5em;
+}
+
+/* preview 提示框 */
+.dict-bookref-preview {
+  position: absolute; z-index: 10;
+  max-width: 360px; padding: .6em .8em;
+  background: #fff; border: 1px solid #e8e3d9; border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.1);
+  font-size: .8rem; line-height: 1.6; color: #4a3f35;
+  pointer-events: none; opacity: 0; transform: translateY(6px);
+  transition: opacity .15s, transform .15s;
+}
+.dict-bookref-line { position: relative; }
+.dict-bookref-line:hover .dict-bookref-preview { opacity: 1; transform: translateY(0); }
+
+/* 词条标签 */
+.dict-tags { margin-top: .6em; }
+.dict-tag {
+  display: inline-block; background: #f3efe7; color: #8a7257;
+  font-size: .7rem; padding: .15em .55em; border-radius: 999px;
+  margin: 0 .4em .2em 0;
+}
+
+/* 高亮 */
+mark { background: #fff2b8; color: inherit; padding: 0 1px; border-radius: 2px; }
+
+/* 空状态 */
+.dict-empty { color: #999; padding: 1.5em 0; text-align: center; }

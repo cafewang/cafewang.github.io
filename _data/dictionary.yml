@@ -1,18 +1,18 @@
-# 词典词条数据库 —— 由你维护
-# 每个词条包含：title（标题）、content（内容）、tags（标签，数组）
-# 新增词条：复制下面任意一项，改掉内容即可；搜索时会匹配 title 或 content。
-- title: "API"
-  content: "应用程序编程接口（Application Programming Interface），软件系统之间互相通信、交换数据的一套约定与规范。"
+# 词典词条数据库 —— 由用户维护
+# 每个词条包含：title（标题，理论上唯一）、meanings(数组，每一条都是结构化的，词条title下一行展示workClass(可选)，用标签形式，动词展示"动"，
+#  名词展示"名"，形容词展示"形"，暂时支持这些，再下一行展示explanation（可选），再下一行展示bookRefs，也是数组，每一个展示一行，第一行前展示标签“援例”
+# bookRefs的一个对象包含bookName和content，展示形式为 'content —— 《bookName》'，按单引号中的格式，preview为可选，有则在hover时展示，注意preview可以是html段，需要作为html渲染，link也为可选，如果存在，该行可以作为超链接点击，不以超链接的样式显示)
+# 新增词条：复制下面任意一项，改掉内容即可；搜索时会匹配 title。
+- title: "臻"
+  meanings:
+    - explanation: 至，到
+      wordClass: 动词
+      bookRefs:
+        - bookName: 说文
+          content: 臻，至也
+        - bookName: 尔雅·释诂
+          content: 迄、臻、极...，至也。
+          preview: 迄、臻、极、到、赴、来、吊、艐、格、戾、怀、摧、詹，<b>至也</b>。
+          link: https://erya.5000yan.com/1005.html
   tags:
-    - 术语
-    - 编程
-- title: "Bug"
-  content: "导致软件行为偏离预期的任何问题，小到拼写错误，大到系统崩溃。"
-  tags:
-    - 术语
-    - 调试
-- title: "CDN"
-  content: "内容分发网络（Content Delivery Network），将静态资源缓存到离用户更近的节点，从而加快访问速度。"
-  tags:
-    - 网络
-    - 性能
+    - 尔雅
