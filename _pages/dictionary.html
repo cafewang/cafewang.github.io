@@ -6,11 +6,12 @@ author_profile: false
 toc: false
 ---
 
-<p>在下方搜索框中输入关键字，可实时筛选标题包含该关键字的词条。</p>
+<p>在下方搜索框中输入关键字，可实时筛选标题包含该关键字的词条；也可以点击词云中的词条快速搜索。</p>
 
 <div class="dict-search">
   <input type="search" id="dict-input" placeholder="搜索词条标题…" autocomplete="off" />
   <p class="dict-hint" id="dict-count" aria-live="polite"></p>
+  <div id="dict-wordcloud" class="dict-wordcloud" role="group" aria-label="随机词条" hidden></div>
   <ul id="dict-results" class="dict-list"></ul>
 </div>
 
