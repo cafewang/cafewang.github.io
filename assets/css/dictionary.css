@@ -106,11 +106,14 @@
   border-radius: 999px; margin-right: .5em;
 }
 
-/* preview 浮层：挂在 body 上，由 JS 按鼠标坐标以 fixed 定位 */
+/* preview 浮层：挂在 body 上，由 JS 以 fixed 定位（鼠标跟随 / 触屏锚定到书证行） */
 /* 不给 left/top 加过渡，否则跟随鼠标会有拖影；visibility 保证隐藏时仍可测量尺寸 */
 .dict-preview-tooltip {
   position: fixed; left: 0; top: 0; z-index: 1000;
-  max-width: 360px; padding: .6em .8em;
+  box-sizing: border-box;
+  max-width: 360px;
+  max-width: min(360px, calc(100vw - 16px)); /* 窄屏不溢出视口 */
+  padding: .6em .8em;
   background: #fff; border: 1px solid #e8e3d9; border-radius: 6px;
   box-shadow: 0 4px 16px rgba(0,0,0,.1);
   font-size: .8rem; line-height: 1.6; color: #4a3f35;
@@ -120,8 +123,24 @@
 }
 .dict-preview-tooltip.is-visible { opacity: 1; visibility: visible; }
 
+/* 链接行首次点击时，浮层底部提示「再次点击打开链接」 */
+.dict-preview-hint {
+  margin-top: .5em; padding-top: .45em;
+  border-top: 1px solid #ece7dd;
+  color: #8a8175; font-size: .75rem;
+}
+
 /* 有 preview 的行给一点可感知提示；链接行保持手型指针 */
 .dict-bookref-line--preview:not(.dict-bookref-line--link) { cursor: help; }
+
+/* 触屏没有 hover：用虚线下划线 + 按下反馈提示这一行可点开书证 */
+@media (hover: none) {
+  .dict-bookref-line--preview {
+    text-decoration: underline dotted #d6cbb8;
+    text-underline-offset: .3em;
+  }
+  .dict-bookref-line--preview:active { background: #faf8f5; }
+}
 
 /* 词条标签 */
 .dict-tags { margin-top: .6em; }

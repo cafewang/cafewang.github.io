@@ -289,12 +289,17 @@ const renderWordCloud = (cloudEl, titles, onPick) => {
   return { start, stop };
 };
 
-// ===== preview 浮层：跟随鼠标 =====
-// 单个全局浮层挂在 body 上，用 position: fixed + clientX/clientY 定位，
-// 彻底脱离书证行的文档流（不再受 .dict-bookref-line 的 relative 影响）。
+// ===== preview 浮层：鼠标跟随 + 触屏点击 =====
+// 单个全局浮层挂在 body 上，position: fixed。
+// 有 hover 能力的设备：按 clientX/clientY 跟随鼠标；
+// 触屏（无 hover）：点击书证行把浮层锚定在行的上方/下方，再点或点空白处收起。
+// 链接行首次点击只展示 preview 并阻止跳转，再次点击才打开链接，避免一触碰就离开页面。
 const PREVIEW_OFFSET_X = 14;
 const PREVIEW_OFFSET_Y = 18;
 const PREVIEW_EDGE = 8;
+const PREVIEW_TAP_GAP = 10;
+const PREVIEW_TOUCH_WINDOW = 700; // 识别触屏 tap 后浏览器合成的 mouse 事件
+const PREVIEW_LINK_HINT = '<div class="dict-preview-hint">\u518d\u6b21\u70b9\u51fb\u6253\u5f00\u94fe\u63a5</div>';
 
 const createPreviewController = (rootEl) => {
   const tip = document.createElement('div');
@@ -302,15 +307,35 @@ const createPreviewController = (rootEl) => {
   tip.setAttribute('role', 'tooltip');
   document.body.appendChild(tip);
 
+  const supportsHover = typeof window.matchMedia === 'function'
+    ? window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    : true;
+
   let activeLine = null;
   let visible = false;
   let tipW = 0;
   let tipH = 0;
+  let currentHtml = null;
+  let pinnedLine = null;  // 触屏/键盘：浮层锚定在这一行
+  let lastTouchAt = 0;
+
+  const fromTouch = (e) =>
+    !!((e && e.pointerType === 'touch') ||
+       (e && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) ||
+       (Date.now() - lastTouchAt < PREVIEW_TOUCH_WINDOW));
+
+  const findLine = (e) => {
+    const t = e && e.target;
+    const line = t && t.closest ? t.closest('.dict-bookref-line[data-preview]') : null;
+    return line && rootEl.contains(line) ? line : null;
+  };
 
   const hide = () => {
-    if (!visible && !activeLine) return;
+    if (!visible && !activeLine && !pinnedLine) return;
     visible = false;
     activeLine = null;
+    pinnedLine = null;
+    currentHtml = null;
     tip.classList.remove('is-visible');
   };
 
@@ -323,51 +348,103 @@ const createPreviewController = (rootEl) => {
     tipH = rect.height;
   };
 
+  // 鼠标：跟随指针，靠近视口右/下边缘时翻到另一侧
   const place = (clientX, clientY) => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     let x = clientX + PREVIEW_OFFSET_X;
     let y = clientY + PREVIEW_OFFSET_Y;
 
-    // 右侧/底部放不下时翻到鼠标另一侧
     if (x + tipW > vw - PREVIEW_EDGE) x = clientX - tipW - PREVIEW_OFFSET_X;
     if (y + tipH > vh - PREVIEW_EDGE) y = clientY - tipH - PREVIEW_OFFSET_Y;
 
-    // 最终约束在视口内
     const maxX = Math.max(PREVIEW_EDGE, vw - tipW - PREVIEW_EDGE);
     const maxY = Math.max(PREVIEW_EDGE, vh - tipH - PREVIEW_EDGE);
     tip.style.left = `${Math.round(Math.max(PREVIEW_EDGE, Math.min(x, maxX)))}px`;
     tip.style.top = `${Math.round(Math.max(PREVIEW_EDGE, Math.min(y, maxY)))}px`;
   };
 
-  const show = (line, clientX, clientY) => {
-    if (line !== activeLine) {
+  // 触屏/键盘：锚定到书证行附近（优先上方居中，放不下改下方），再 clamp 进视口
+  const placeNear = (line) => {
+    const r = line.getBoundingClientRect
+      ? line.getBoundingClientRect()
+      : { left: 0, top: 0, bottom: 0, width: 0 };
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let x = r.left + r.width / 2 - tipW / 2;
+    let y = r.top - tipH - PREVIEW_TAP_GAP;
+    if (y < PREVIEW_EDGE) y = r.bottom + PREVIEW_TAP_GAP;
+    const maxX = Math.max(PREVIEW_EDGE, vw - tipW - PREVIEW_EDGE);
+    const maxY = Math.max(PREVIEW_EDGE, vh - tipH - PREVIEW_EDGE);
+    tip.style.left = `${Math.round(Math.max(PREVIEW_EDGE, Math.min(x, maxX)))}px`;
+    tip.style.top = `${Math.round(Math.max(PREVIEW_EDGE, Math.min(y, maxY)))}px`;
+  };
+
+  const show = (line, coords, extraHtml = '') => {
+    const html = (line.dataset.preview || '') + extraHtml;
+    if (line !== activeLine || html !== currentHtml) {
       activeLine = line;
+      currentHtml = html;
       // preview 本身是受信任的数据片段，按需求作为 HTML 渲染
-      tip.innerHTML = line.dataset.preview || '';
+      tip.innerHTML = html;
       tip.classList.add('is-visible');
       visible = true;
       measure();
     }
-    place(clientX, clientY);
+    if (coords) place(coords.x, coords.y);
+    else placeNear(line);
   };
 
-  // 列表会被 innerHTML 反复重渲染，因此把事件委托到容器上
-  const onMove = (e) => {
-    const target = e.target;
-    const line = target && target.closest
-      ? target.closest('.dict-bookref-line[data-preview]')
-      : null;
-    if (!line || !rootEl.contains(line)) {
-      hide();
+  // 列表会被 innerHTML 反复重渲染，因此所有事件都委托到容器
+  if (supportsHover) {
+    const onMove = (e) => {
+      // 忽略触屏 tap 后浏览器合成的 mouseover/mousemove，避免覆盖锚定浮层
+      if (pinnedLine || fromTouch(e)) return;
+      const line = findLine(e);
+      if (!line) { hide(); return; }
+      show(line, { x: e.clientX, y: e.clientY });
+    };
+    rootEl.addEventListener('mousemove', onMove);
+    rootEl.addEventListener('mouseover', onMove);
+    rootEl.addEventListener('mouseleave', () => { if (!pinnedLine && !fromTouch()) hide(); });
+
+    // 键盘 Tab 到带 preview 的链接行时也能看到内容
+    rootEl.addEventListener('focusin', (e) => {
+      const line = findLine(e);
+      if (!line || fromTouch(e)) return;
+      pinnedLine = line;
+      show(line, null);
+    });
+    rootEl.addEventListener('focusout', () => { if (pinnedLine) hide(); });
+  }
+
+  // 记录触摸：既用于识别合成 mouse 事件，也兼容二合一设备
+  rootEl.addEventListener('touchstart', () => { lastTouchAt = Date.now(); }, { passive: true });
+  rootEl.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') lastTouchAt = Date.now();
+  }, true);
+
+  // 触屏点击：显示/收起浮层；链接行两段式，首次不跳转
+  rootEl.addEventListener('click', (e) => {
+    const line = findLine(e);
+    if (!line || !fromTouch(e)) return; // 鼠标点击交给 hover / 原链接行为
+
+    const isLink = line.classList.contains('dict-bookref-line--link');
+    if (pinnedLine === line) {
+      hide();                          // 第二次：非链接行收起，链接行放行跳转
       return;
     }
-    show(line, e.clientX, e.clientY);
-  };
+    if (isLink) e.preventDefault();    // 首次只展示 preview，不离开页面
+    pinnedLine = line;
+    show(line, null, isLink ? PREVIEW_LINK_HINT : '');
+  });
 
-  rootEl.addEventListener('mousemove', onMove);
-  rootEl.addEventListener('mouseover', onMove);
-  rootEl.addEventListener('mouseleave', hide);
+  // 点书证行以外的任何地方都收起（浮层 pointer-events:none，点它会穿透到这里）
+  document.addEventListener('click', (e) => {
+    if (!visible || findLine(e)) return;
+    hide();
+  });
+
   // 滚动/缩放后不再沿用旧坐标，直接收起
   window.addEventListener('scroll', hide, true);
   window.addEventListener('resize', hide);
