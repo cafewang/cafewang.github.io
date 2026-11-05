@@ -66,7 +66,7 @@
 /* 义项容器 */
 .dict-meaning { margin-top: .6em; }
 
-/* 词性标签行：独立一行，仅显示"动"/"名"/"形"标签 */
+/* 词性标签行：独立一行，仅显示"动"/"名"/"形"/"副"标签 */
 .dict-wordclass-line { margin: .2em 0; }
 .word-class-tag {
   display: inline-block; font-size: .65rem; font-weight: 600;
@@ -76,6 +76,7 @@
 .word-class-tag--verb { background: #e8f4ea; color: #2d7d32; }
 .word-class-tag--noun { background: #e3f2fd; color: #1565c0; }
 .word-class-tag--adj  { background: #fce4ec; color: #c2185b; }
+.word-class-tag--adv  { background: #fff3e0; color: #a86200; }
 .word-class-tag--other { background: #f3efe7; color: #8a7257; }
 
 /* 释义行：独立一行 */
@@ -106,7 +107,31 @@
   border-radius: 999px; margin-right: .5em;
 }
 
-/* preview 浮层：挂在 body 上，由 JS 以 fixed 定位（鼠标跟随 / 触屏锚定到书证行） */
+/* ===== 同义词行：bookRefs 下方，一组标签排在一行，行首「义近」 ===== */
+.dict-synonym-line {
+  display: flex; align-items: center; flex-wrap: wrap; /* 窄屏放不下才折行，默认单行 */
+  gap: .3em .45em; margin-top: .45em;
+}
+/* 与「援例」标签同尺寸，保证两行文字起始位置对齐 */
+.dict-synonym-label {
+  flex: none;
+  display: inline-block; font-size: .65rem; font-weight: 600;
+  width: 3.2em; padding: .08em .4em;
+  border-radius: 999px; vertical-align: middle;
+  background: #e9f1ed; color: #3f6b57;
+}
+.dict-synonym-tag {
+  display: inline-block; font-size: .78rem; line-height: 1.5;
+  padding: .1em .55em; border-radius: 999px;
+  background: #f3efe7; color: #8a7257;
+  text-decoration: none; cursor: default;
+  transition: background .15s, color .15s;
+}
+/* 命中已有词条的同义词：可点击、在新页搜索；仍保持标签外观，不显示成普通链接 */
+.dict-synonym-tag--link { cursor: pointer; background: #efe7d8; color: #6b5236; }
+.dict-synonym-tag--link:hover { background: #e2d2b8; color: #4a3f35; }
+
+/* preview 浮层：挂在 body 上，由 JS 以 fixed 定位（鼠标跟随 / 触屏锚定到书证行或同义词标签） */
 /* 不给 left/top 加过渡，否则跟随鼠标会有拖影；visibility 保证隐藏时仍可测量尺寸 */
 .dict-preview-tooltip {
   position: fixed; left: 0; top: 0; z-index: 1000;
@@ -130,16 +155,19 @@
   color: #8a8175; font-size: .75rem;
 }
 
-/* 有 preview 的行给一点可感知提示；链接行保持手型指针 */
-.dict-bookref-line--preview:not(.dict-bookref-line--link) { cursor: help; }
+/* 有 preview 的书证行/同义词标签给一点可感知提示；链接行保持手型指针 */
+.dict-bookref-line--preview:not(.dict-bookref-line--link),
+.dict-synonym-tag--preview:not(.dict-synonym-tag--link) { cursor: help; }
 
-/* 触屏没有 hover：用虚线下划线 + 按下反馈提示这一行可点开书证 */
+/* 触屏没有 hover：用虚线下划线 + 按下反馈提示「可点开预览」 */
 @media (hover: none) {
-  .dict-bookref-line--preview {
+  .dict-bookref-line--preview,
+  .dict-synonym-tag--preview {
     text-decoration: underline dotted #d6cbb8;
     text-underline-offset: .3em;
   }
   .dict-bookref-line--preview:active { background: #faf8f5; }
+  .dict-synonym-tag--preview:active { background: #e6d8c0; }
 }
 
 /* 词条标签 */

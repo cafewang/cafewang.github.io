@@ -1,7 +1,8 @@
 # 词典词条数据库 —— 由用户维护
 # 每个词条包含：title（标题，理论上唯一）、meanings(数组，每一条都是结构化的，词条title下一行展示workClass(可选)，用标签形式，动词展示"动"，
-#  名词展示"名"，形容词展示"形"，暂时支持这些，再下一行展示explanation（可选），再下一行展示bookRefs，也是数组，每一个展示一行，第一行前展示标签“援例”
+#  名词展示"名"，形容词展示"形"，副词展示"副"，暂时支持这些；再下一行展示explanation（可选），再下一行展示bookRefs，也是数组，每一个展示一行，第一行前展示标签“援例”
 # bookRefs的一个对象包含bookName和content，展示形式为 'content —— 《bookName》'，按单引号中的格式，preview为可选，有则在hover时展示，注意preview可以是html段，需要作为html渲染，link也为可选，如果存在，该行可以作为超链接点击，不以超链接的样式显示)
+# bookRefs下方展示synonym(同义词数组)，单行展示，行首为标签(文本为'义近')，每个元素按顺序展示为标签，文本为synonymName，如果有preview属性，和bookRefs的preview展示逻辑相同(包含app端逻辑)，另外，如果synonymName也是词条，可以作为超链接点击，在新页面将synonymName作为keyword搜索
 # 新增词条：复制下面任意一项，改掉内容即可；搜索时会匹配 title。
 - title: "臻"
   meanings:
@@ -16,3 +17,33 @@
           link: https://erya.5000yan.com/1005.html
   tags:
     - 尔雅
+- title: "荐"
+  meanings:
+    - explanation: 本意，草席
+      wordClass: 名词
+      bookRefs:
+        - bookName: 说文
+          content: 凡亲地者谓之筵，加于筵者谓之席。席即因也，重于筵也。
+    - explanation: 再，重，接连，因为席加于筵之上，所以引申出重的意思
+      wordClass: 副词
+      bookRefs:
+        - bookName: 国语·鲁语上
+          content: 饥馑荐降
+          preview: 五谷不熟为饥，蔬菜不熟为馑
+    - explanation: 进献，无酒肉作祭品的祭礼称作荐，引申出进献的意思
+      wordClass: 动词
+      bookRefs:
+        - bookName: 梁书·袁昂传
+          content: 未遑荐璧
+      synonym:
+        - synonymName: 珍
+          preview: 献物曰珍
+        - synonymName: 享
+          preview: 献食曰享
+        - synonymName: 臻
+          preview: 测试用
+    - explanation: 推荐人才，介绍，即所献之物为人
+      wordClass: 动词
+      bookRefs:
+         - bookName: 孟子·万章上
+           content: 昔者，尧荐舜于天，而天受之

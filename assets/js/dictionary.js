@@ -4,21 +4,27 @@
  *  - title: string (唯一)
  *  - meanings: Array<{
  *      explanation?: string,
- *      wordClass?: string,      // "动词"->"动", "名词"->"名", "形容词"->"形"
+ *      wordClass?: string,      // "动词"->"动", "名词"->"名", "形容词"->"形", "副词"->"副"
  *      bookRefs?: Array<{
  *          bookName: string,
  *          content: string,
  *          preview?: string,    // HTML 片段，hover 显示
  *          link?: string        // 若存在，整行可点击跳转，不显示链接样式
- *      }>
+ *      }>,
+ *      synonym?: Array<{       // 同义词，bookRefs 下方单行展示，行首"义近"标签
+ *          synonymName: string,
+ *          preview?: string    // 同 bookRefs.preview（含触屏浮层逻辑）
+ *      }>                     // synonymName 命中已有词条时，新页面打开 ?keyword=xxx
  *    }>
  *  - tags?: string[]
  * 搜索：仅匹配 title（按需求）
+ * URL 参数：?keyword=xxx 仅在首次进入时读取一次，之后不再改动地址栏。
  * 展示顺序（按 YAML 注释）：
  *   标题
  *   ├─ wordClass 标签（可选，独立一行）
  *   ├─ explanation（可选，独立一行）
- *   └─ bookRefs[]（每行一个，首行前加"援例"标签，格式：content —— 《bookName》）
+ *   ├─ bookRefs[]（每行一个，首行前加"援例"标签，格式：content —— 《bookName》）
+ *   └─ synonym[]（单行，行首"义近"标签，每个 synonymName 一个标签）
  */
 
 // 防 XSS
@@ -41,6 +47,8 @@ const highlight = (text, keyword) => {
 const wordClassInfo = (cls) => {
   const c = String(cls ?? '').trim();
   if (!c) return { tag: '', text: '' };
+  // "副词"放在最前，避免未来出现"副词/动词"这类组合时被后面的动/名/形抢先匹配
+  if (c.includes('\u526f')) return { tag: 'word-class-tag--adv', text: '\u526f' };  // 副
   if (c.includes('\u52a8')) return { tag: 'word-class-tag--verb', text: '\u52a8' }; // 动
   if (c.includes('\u540d')) return { tag: 'word-class-tag--noun', text: '\u540d' }; // 名
   if (c.includes('\u5f62')) return { tag: 'word-class-tag--adj', text: '\u5f62' }; // 形
@@ -77,13 +85,47 @@ const renderBookRefLine = (ref, keyword, isFirst) => {
   const inner = `${labelHtml}${lineText}`;
 
   if (hasLink) {
-    return `<a class="${cls}"${previewAttr} href="${escapeHtml(ref.link)}" target="_blank" rel="noopener noreferrer">${inner}</a>`;
+    // data-has-link：浮层控制器据此判断「链接行」，触屏走两段式点击
+    return `<a class="${cls}"${previewAttr} data-has-link="1" href="${escapeHtml(ref.link)}" target="_blank" rel="noopener noreferrer">${inner}</a>`;
   }
   return `<span class="${cls}"${previewAttr}>${inner}</span>`;
 };
 
-// 渲染单个 meaning：按顺序输出 wordClass 行、explanation 行、bookRefs 行
-const renderMeaning = (m, keyword) => {
+// 同义词行：bookRefs 下方单行展示，行首「义近」标签，之后按数组顺序排 synonymName 标签。
+// - 带 preview：写 data-preview，复用书证行的全局浮层（鼠标跟随 + 触屏两段式，含 app 端逻辑）。
+// - synonymName 命中已有词条：生成 ?keyword=xxx 链接，target="_blank" 在新页面直达搜索结果。
+//   用相对查询串可自动沿用当前词典页路径（含 baseurl），无需读 location。
+const renderSynonymLine = (synonyms, keyword, knownTitles) => {
+  const tags = (synonyms ?? []).map((s) => {
+    const name = String(s?.synonymName ?? '').trim();
+    if (!name) return '';
+
+    const hasPreview = s.preview && String(s.preview).trim();
+    const isEntry = !!knownTitles && knownTitles.has(name);
+    const cls = ['dict-synonym-tag',
+      hasPreview ? 'dict-synonym-tag--preview' : '',
+      isEntry ? 'dict-synonym-tag--link' : ''
+    ].join(' ').trim();
+    const previewAttr = hasPreview
+      ? ` data-preview="${escapeHtml(s.preview)}"`
+      : '';
+    const linkAttr = isEntry ? ' data-has-link="1"' : '';
+    const text = highlight(name, keyword);
+
+    if (isEntry) {
+      const href = `?keyword=${encodeURIComponent(name)}`;
+      return `<a class="${cls}"${previewAttr}${linkAttr} href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    }
+    return `<span class="${cls}"${previewAttr}>${text}</span>`;
+  }).filter(Boolean).join('');
+
+  if (!tags) return '';
+  return `<div class="dict-synonym-line"><span class="dict-synonym-label">\u4e49\u8fd1</span>${tags}</div>`; // 义近
+};
+
+// 渲染单个 meaning：按顺序输出 wordClass 行、explanation 行、bookRefs 行、synonym 行
+// knownTitles 是全量词条标题的 Set，用来判断 synonymName 是否可链接到搜索页
+const renderMeaning = (m, keyword, knownTitles) => {
   const lines = [];
 
   // 1. 词性标签行（可选，独立一行）
@@ -105,13 +147,19 @@ const renderMeaning = (m, keyword) => {
     lines.push(`<div class="dict-bookrefs-lines">${refsHtml}</div>`);
   }
 
+  // 4. 同义词行（数组，单行「义近」+ 若干标签）
+  if (m.synonym?.length) {
+    const synonymHtml = renderSynonymLine(m.synonym, keyword, knownTitles);
+    if (synonymHtml) lines.push(synonymHtml);
+  }
+
   return `<div class="dict-meaning">${lines.join('')}</div>`;
 };
 
 // 渲染单个词条
-const renderEntry = (entry, keyword) => {
+const renderEntry = (entry, keyword, knownTitles) => {
   const title = highlight(entry.title, keyword);
-  const meaningsHtml = (entry.meanings ?? []).map((m) => renderMeaning(m, keyword)).join('');
+  const meaningsHtml = (entry.meanings ?? []).map((m) => renderMeaning(m, keyword, knownTitles)).join('');
 
   const tagsHtml = entry.tags?.length
     ? `<div class="dict-tags">${entry.tags.map((t) => `<span class="dict-tag">${escapeHtml(t)}</span>`).join('')}</div>`
@@ -137,9 +185,13 @@ const searchEntries = (entries, keyword) => {
 // 主渲染
 const render = (entries, keyword, resultsEl, countEl) => {
   const list = searchEntries(entries, keyword);
+  // 全量标题用于判断 synonymName 是否也是词条（不能用搜索后的子集，否则命中项会漏判）
+  const knownTitles = new Set(
+    (entries ?? []).map((e) => String(e.title ?? '').trim()).filter(Boolean)
+  );
   countEl.textContent = list.length ? `\u5171 ${list.length} \u6761\u7ed3\u679c` : '';
   resultsEl.innerHTML = list.length
-    ? list.map((e) => renderEntry(e, keyword)).join('')
+    ? list.map((e) => renderEntry(e, keyword, knownTitles)).join('')
     : '<li class="dict-empty">\u6ca1\u6709\u627e\u5230\u5339\u914d\u7684\u8bcd\u6761\u3002</li>';
 };
 
@@ -292,7 +344,7 @@ const renderWordCloud = (cloudEl, titles, onPick) => {
 // ===== preview 浮层：鼠标跟随 + 触屏点击 =====
 // 单个全局浮层挂在 body 上，position: fixed。
 // 有 hover 能力的设备：按 clientX/clientY 跟随鼠标；
-// 触屏（无 hover）：点击书证行把浮层锚定在行的上方/下方，再点或点空白处收起。
+// 触屏（无 hover）：点击书证行/同义词标签把浮层锚定在其上方/下方，再点或点空白处收起。
 // 链接行首次点击只展示 preview 并阻止跳转，再次点击才打开链接，避免一触碰就离开页面。
 const PREVIEW_OFFSET_X = 14;
 const PREVIEW_OFFSET_Y = 18;
@@ -324,9 +376,10 @@ const createPreviewController = (rootEl) => {
        (e && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) ||
        (Date.now() - lastTouchAt < PREVIEW_TOUCH_WINDOW));
 
+  // 书证行与同义词标签都用 data-preview 标记，共用这一套浮层（含触屏两段式）
   const findLine = (e) => {
     const t = e && e.target;
-    const line = t && t.closest ? t.closest('.dict-bookref-line[data-preview]') : null;
+    const line = t && t.closest ? t.closest('[data-preview]') : null;
     return line && rootEl.contains(line) ? line : null;
   };
 
@@ -364,7 +417,7 @@ const createPreviewController = (rootEl) => {
     tip.style.top = `${Math.round(Math.max(PREVIEW_EDGE, Math.min(y, maxY)))}px`;
   };
 
-  // 触屏/键盘：锚定到书证行附近（优先上方居中，放不下改下方），再 clamp 进视口
+  // 触屏/键盘：锚定到书证行/同义词标签附近（优先上方居中，放不下改下方），再 clamp 进视口
   const placeNear = (line) => {
     const r = line.getBoundingClientRect
       ? line.getBoundingClientRect()
@@ -429,7 +482,8 @@ const createPreviewController = (rootEl) => {
     const line = findLine(e);
     if (!line || !fromTouch(e)) return; // 鼠标点击交给 hover / 原链接行为
 
-    const isLink = line.classList.contains('dict-bookref-line--link');
+    // data-has-link 由书证链接行与「同义词也是词条」的标签共同下发
+    const isLink = line.dataset.hasLink === '1';
     if (pinnedLine === line) {
       hide();                          // 第二次：非链接行收起，链接行放行跳转
       return;
@@ -450,6 +504,18 @@ const createPreviewController = (rootEl) => {
   window.addEventListener('resize', hide);
 
   return { hide };
+};
+
+// ===== URL 参数：?keyword=xxx 首次进入时读取一次 =====
+// 只在页面加载时读，之后搜索框怎么改都不动地址栏（避免多余的 history 逻辑）。
+const readKeywordFromUrl = () => {
+  try {
+    const search = window.location && window.location.search;
+    if (!search || typeof URLSearchParams !== 'function') return '';
+    return new URLSearchParams(search).get('keyword') || '';
+  } catch (e) {
+    return '';
+  }
 };
 
 // 初始化
@@ -511,7 +577,9 @@ const initDictionary = () => {
     rafId = requestAnimationFrame(() => updateView(input.value));
   });
 
-  updateView('');
+  // 直达链接：?keyword=臻 只在首次进入时读一次，回填输入框并展示结果；无参数则展示词云
+  input.value = readKeywordFromUrl().trim();
+  updateView(input.value);
 };
 
 if (document.readyState === 'loading') {
@@ -521,5 +589,5 @@ if (document.readyState === 'loading') {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { escapeHtml, escapeRegExp, highlight, wordClassInfo, renderBookRefLine, renderMeaning, renderEntry, searchEntries, render, shuffle, pickCloudWords, buildCloudSlots, renderWordCloud, createPreviewController, initDictionary };
+  module.exports = { escapeHtml, escapeRegExp, highlight, wordClassInfo, renderBookRefLine, renderSynonymLine, renderMeaning, renderEntry, searchEntries, render, shuffle, pickCloudWords, buildCloudSlots, renderWordCloud, createPreviewController, readKeywordFromUrl, initDictionary };
 }
