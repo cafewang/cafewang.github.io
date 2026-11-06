@@ -25,6 +25,8 @@
  *   ├─ explanation（可选，独立一行）
  *   ├─ bookRefs[]（每行一个，首行前加"援例"标签，格式：content —— 《bookName》）
  *   └─ synonym[]（单行，行首"义近"标签，每个 synonymName 一个标签）
+ * 能力角标（bookRefs 行 / synonym 标签通用）：由 preview、link 组合出 4 态，
+ *   写 data-capability='preview'|'link'|'both'，行尾显示圆圈 i（可预览）/ 外链箭头（可跳转）。
  */
 
 // 防 XSS
@@ -55,6 +57,38 @@ const wordClassInfo = (cls) => {
   return { tag: 'word-class-tag--other', text: c };
 };
 
+// ===== 能力角标：把「可预览 / 可跳转」显式画出来 =====
+// 四种状态：纯文本（无角标）、仅 preview（圆圈 i）、仅 link（外链箭头）、两者都有（两个并列）。
+// 图标用 currentColor 上色且 aria-hidden，另附一段视觉隐藏的文字给屏幕阅读器，
+// 避免用 aria-label 覆盖链接自身的可读文本（书名 / 同义词名）。
+const CAP_ICON_PREVIEW =
+  '<svg class="dict-cap-icon dict-cap-icon--preview" viewBox="0 0 12 12" aria-hidden="true" focusable="false">' +
+  '<circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1"/>' +
+  '<path d="M6 5.2v3.2M6 3.3v.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>' +
+  '</svg>';
+const CAP_ICON_LINK =
+  '<svg class="dict-cap-icon dict-cap-icon--link" viewBox="0 0 12 12" aria-hidden="true" focusable="false">' +
+  '<path d="M3.4 8.6L8.6 3.4M4.8 3.4h3.8v3.8" fill="none" stroke="currentColor" ' +
+  'stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>' +
+  '</svg>';
+
+// capability: 'preview' | 'link' | 'both' | ''（无能力时不写 data-capability）
+const capabilityOf = (hasPreview, hasLink) =>
+  hasPreview && hasLink ? 'both' : hasPreview ? 'preview' : hasLink ? 'link' : '';
+
+const capabilityMarkup = (hasPreview, hasLink) => {
+  if (!hasPreview && !hasLink) return { icons: '', a11y: '' };
+  const desc = hasPreview && hasLink
+    ? '\u53ef\u67e5\u770b\u5f15\u6587\u9884\u89c8\uff0c\u4e5f\u53ef\u70b9\u51fb\u6253\u5f00\u94fe\u63a5' // 可查看引文预览，也可点击打开链接
+    : hasPreview
+      ? '\u53ef\u67e5\u770b\u5f15\u6587\u9884\u89c8'                                                   // 可查看引文预览
+      : '\u53ef\u70b9\u51fb\u6253\u5f00\u94fe\u63a5';                                                // 可点击打开链接
+  return {
+    icons: (hasPreview ? CAP_ICON_PREVIEW : '') + (hasLink ? CAP_ICON_LINK : ''),
+    a11y: `<span class="dict-cap-a11y">${desc}</span>`
+  };
+};
+
 // 渲染单个 bookRef 行
 // preview 不再作为行内 <span> 插入：absolute 且未指定偏移时只会停在静态位置（行尾右下角）。
 // 改为把 HTML 片段转义后存入 data-preview，由全局浮层读取并跟随鼠标展示。
@@ -77,18 +111,22 @@ const renderBookRefLine = (ref, keyword, isFirst) => {
     ? ` data-preview="${escapeHtml(ref.preview)}"`
     : '';
 
+  // data-capability 显式描述四种交互能力，供 CSS 与浮层控制器按状态分支
+  const capability = capabilityOf(hasPreview, hasLink);
+  const capAttr = capability ? ` data-capability="${capability}"` : '';
+  const cap = capabilityMarkup(hasPreview, hasLink);
+
   // 仅首行加"援例"标签
   const labelHtml = isFirst
     ? '<span class="dict-bookref-label">\u63f4\u4f8b</span>' // 援例
     : '<span class="dict-bookref-label-spacer"></span>'; // 占位保持对齐
 
-  const inner = `${labelHtml}${lineText}`;
+  const inner = `${labelHtml}${lineText}${cap.icons}${cap.a11y}`;
 
   if (hasLink) {
-    // data-has-link：浮层控制器据此判断「链接行」，触屏走两段式点击
-    return `<a class="${cls}"${previewAttr} data-has-link="1" href="${escapeHtml(ref.link)}" target="_blank" rel="noopener noreferrer">${inner}</a>`;
+    return `<a class="${cls}"${previewAttr}${capAttr} href="${escapeHtml(ref.link)}" target="_blank" rel="noopener noreferrer">${inner}</a>`;
   }
-  return `<span class="${cls}"${previewAttr}>${inner}</span>`;
+  return `<span class="${cls}"${previewAttr}${capAttr}>${inner}</span>`;
 };
 
 // 同义词行：bookRefs 下方单行展示，行首「义近」标签，之后按数组顺序排 synonymName 标签。
@@ -109,14 +147,17 @@ const renderSynonymLine = (synonyms, keyword, knownTitles) => {
     const previewAttr = hasPreview
       ? ` data-preview="${escapeHtml(s.preview)}"`
       : '';
-    const linkAttr = isEntry ? ' data-has-link="1"' : '';
+    // 同义词命中已有词条 => 可跳转；与 preview 组合出四态，和书证行用同一套 capability/角标
+    const capability = capabilityOf(hasPreview, isEntry);
+    const capAttr = capability ? ` data-capability="${capability}"` : '';
+    const cap = capabilityMarkup(hasPreview, isEntry);
     const text = highlight(name, keyword);
 
     if (isEntry) {
       const href = `?keyword=${encodeURIComponent(name)}`;
-      return `<a class="${cls}"${previewAttr}${linkAttr} href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+      return `<a class="${cls}"${previewAttr}${capAttr} href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${text}${cap.icons}${cap.a11y}</a>`;
     }
-    return `<span class="${cls}"${previewAttr}>${text}</span>`;
+    return `<span class="${cls}"${previewAttr}${capAttr}>${text}${cap.icons}${cap.a11y}</span>`;
   }).filter(Boolean).join('');
 
   if (!tags) return '';
@@ -482,8 +523,9 @@ const createPreviewController = (rootEl) => {
     const line = findLine(e);
     if (!line || !fromTouch(e)) return; // 鼠标点击交给 hover / 原链接行为
 
-    // data-has-link 由书证链接行与「同义词也是词条」的标签共同下发
-    const isLink = line.dataset.hasLink === '1';
+    // data-capability 由书证行与同义词标签共同下发；'both' 表示既有预览又能跳转。
+    // findLine 只命中 [data-preview]，所以「仅 link」的行不进这里，触屏一点即跳转（弹空浮层没有意义）。
+    const isLink = line.dataset.capability === 'both' || line.dataset.capability === 'link';
     if (pinnedLine === line) {
       hide();                          // 第二次：非链接行收起，链接行放行跳转
       return;
@@ -589,5 +631,5 @@ if (document.readyState === 'loading') {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { escapeHtml, escapeRegExp, highlight, wordClassInfo, renderBookRefLine, renderSynonymLine, renderMeaning, renderEntry, searchEntries, render, shuffle, pickCloudWords, buildCloudSlots, renderWordCloud, createPreviewController, readKeywordFromUrl, initDictionary };
+  module.exports = { escapeHtml, escapeRegExp, highlight, wordClassInfo, capabilityOf, capabilityMarkup, renderBookRefLine, renderSynonymLine, renderMeaning, renderEntry, searchEntries, render, shuffle, pickCloudWords, buildCloudSlots, renderWordCloud, createPreviewController, readKeywordFromUrl, initDictionary };
 }

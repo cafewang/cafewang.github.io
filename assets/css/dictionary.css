@@ -155,6 +155,24 @@
   color: #8a8175; font-size: .75rem;
 }
 
+/* ===== 能力角标：圆圈 i = 可预览，外链箭头 = 可跳转（书证行与同义词标签共用） ===== */
+.dict-cap-icon {
+  display: inline-block; box-sizing: border-box;
+  width: 12px; height: 12px;
+  margin-left: .3em; vertical-align: -.08em;
+  flex: none; pointer-events: none;
+}
+.dict-cap-icon--preview { color: #ba7517; } /* 琥珀：悬停可看引文 */
+.dict-cap-icon--link { color: #185fa5; }    /* 蓝：点击可跳转 */
+.dict-cap-icon + .dict-cap-icon { margin-left: .12em; } /* 两者都有时收紧间距 */
+
+/* 视觉隐藏但屏幕阅读器可读；不用 aria-label，避免覆盖链接自身的书名/同义词文本 */
+.dict-cap-a11y {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
 /* 有 preview 的书证行/同义词标签给一点可感知提示；链接行保持手型指针 */
 .dict-bookref-line--preview:not(.dict-bookref-line--link),
 .dict-synonym-tag--preview:not(.dict-synonym-tag--link) { cursor: help; }
@@ -166,8 +184,10 @@
     text-decoration: underline dotted #d6cbb8;
     text-underline-offset: .3em;
   }
-  .dict-bookref-line--preview:active { background: #faf8f5; }
-  .dict-synonym-tag--preview:active { background: #e6d8c0; }
+  .dict-bookref-line--preview:active,
+  .dict-bookref-line--link:active { background: #faf8f5; }
+  .dict-synonym-tag--preview:active,
+  .dict-synonym-tag--link:active { background: #e6d8c0; }
 }
 
 /* 词条标签 */

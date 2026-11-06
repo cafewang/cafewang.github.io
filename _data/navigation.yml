@@ -3,4 +3,4 @@ main:
   - title: "首页"
     url: "/"
   - title: "词典"
-    url: "/dictionary/"
+    url: "/dictionary"
