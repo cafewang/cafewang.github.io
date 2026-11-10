@@ -64,10 +64,31 @@
 .dict-entry-title { font-weight: 600; font-size: 1.2rem; color: #4a3f35; }
 
 /* 义项容器 */
-.dict-meaning { margin-top: .6em; }
+.dict-meaning { margin-top: .6em; padding-bottom: .6em; }
+/* 半透明分割线：义项与义项之间 */
+.dict-meaning:not(:last-child) {
+  border-bottom: 1px solid rgba(74, 63, 53, .12);
+}
 
-/* 词性标签行：独立一行，仅显示"动"/"名"/"形"/"副"标签 */
-.dict-wordclass-line { margin: .2em 0; }
+/* 读音标签行：独立一行 */
+.dict-pronunciation-line { margin: .2em 0; }
+.dict-pronunciation-tag {
+  display: inline-block; font-size: .7rem; font-weight: 500;
+  padding: .1em .5em; border-radius: 999px;
+  vertical-align: middle; line-height: 1;
+  background: #faf8f5; color: #6b5b50; border: 1px solid #e8e3d9;
+}
+
+/* 释义行：独立一行，行首可带 wordClass/borrowedAs 标签 */
+.dict-explanation-line { color: #555; line-height: 1.7; margin: .2em 0 .4em; }
+/* explanation 行内的标签间距微调 */
+.dict-explanation-line .word-class-tag,
+.dict-explanation-line .dict-borrowed-tag {
+  margin-right: .35em;
+  vertical-align: baseline;
+}
+
+/* 词性标签（用于 explanation 行首） */
 .word-class-tag {
   display: inline-block; font-size: .65rem; font-weight: 600;
   padding: .1em .45em; border-radius: 999px;
@@ -79,8 +100,13 @@
 .word-class-tag--adv  { background: #fff3e0; color: #a86200; }
 .word-class-tag--other { background: #f3efe7; color: #8a7257; }
 
-/* 释义行：独立一行 */
-.dict-explanation-line { color: #555; line-height: 1.7; margin: .2em 0 .4em; }
+/* 通假/借字标签（用于 explanation 行首，wordClass 之后） */
+.dict-borrowed-tag {
+  display: inline-block; font-size: .65rem; font-weight: 600;
+  padding: .1em .45em; border-radius: 999px;
+  vertical-align: middle; line-height: 1;
+  background: #f5f0eb; color: #8a7257; border: 1px solid #e8e3d9;
+}
 
 /* 书证/援例行容器 */
 .dict-bookrefs-lines { margin-top: .3em; }

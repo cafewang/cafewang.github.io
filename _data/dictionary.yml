@@ -1,8 +1,17 @@
 # 词典词条数据库 —— 由用户维护
-# 每个词条包含：title（标题，理论上唯一）、meanings(数组，每一条都是结构化的，词条title下一行展示workClass(可选)，用标签形式，动词展示"动"，
-#  名词展示"名"，形容词展示"形"，副词展示"副"，暂时支持这些；再下一行展示explanation（可选），再下一行展示bookRefs，也是数组，每一个展示一行，第一行前展示标签“援例”
-# bookRefs的一个对象包含bookName和content，展示形式为 'content —— 《bookName》'，按单引号中的格式，preview为可选，有则在hover时展示，注意preview可以是html段，需要作为html渲染，link也为可选，如果存在，该行可以作为超链接点击，不以超链接的样式显示)
-# bookRefs下方展示synonym(同义词数组)，单行展示，行首为标签(文本为'义近')，每个元素按顺序展示为标签，文本为synonymName，如果有preview属性，和bookRefs的preview展示逻辑相同(包含app端逻辑)，另外，如果synonymName也是词条，可以作为超链接点击，在新页面将synonymName作为keyword搜索
+# 每个词条包含：title（标题，理论上唯一）、meanings(数组，每一条都是结构化的：
+#   - pronunciation（可选，拼音/读音）：以标签形式展示在 wordClass 上一行
+#   - wordClass（可选）：用标签形式，动词展示"动"，名词展示"名"，形容词展示"形"，副词展示"副"
+#   - borrowedAs（可选，通假/借字）：以标签形式展示在 wordClass 下一行
+#   - explanation（可选）：再下一行展示
+#   - bookRefs（可选，数组）：每一个展示一行，第一行前展示标签“援例”
+#       bookRefs 的一个对象包含 bookName 和 content，展示形式为 'content —— 《bookName》'
+#       preview 为可选，有则在 hover 时展示，注意 preview 可以是 html 段，需要作为 html 渲染
+#       link 也为可选，如果存在，该行可以作为超链接点击，不以超链接的样式显示
+#   - synonym（可选，同义词数组）：bookRefs 下方展示，单行展示，行首为标签(文本为'义近')
+#       每个元素按顺序展示为标签，文本为 synonymName
+#       如果有 preview 属性，和 bookRefs 的 preview 展示逻辑相同（包含 app 端逻辑）
+#       另外，如果 synonymName 也是词条，可以作为超链接点击，在新页面将 synonymName 作为 keyword 搜索
 # 新增词条：复制下面任意一项，改掉内容即可；搜索时会匹配 title。
 - title: "臻"
   meanings:
@@ -20,6 +29,8 @@
 - title: "荐"
   meanings:
     - explanation: 本意，草席
+      pronunciation: jiàn
+      borrowedAs: 通假
       wordClass: 名词
       bookRefs:
         - bookName: 说文

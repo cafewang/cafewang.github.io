@@ -3,8 +3,10 @@
  * 数据结构（来自 _data/dictionary.yml）：
  *  - title: string (唯一)
  *  - meanings: Array<{
+ *      pronunciation?: string,  // 可选，拼音/读音：标签展示在独立一行
+ *      wordClass?: string,      // "动词"->"动", "名词"->"名", "形容词"->"形", "副词"->"副"，标签展示在 explanation 行首
+ *      borrowedAs?: string,     // 可选，通假/借字：标签展示在 explanation 行首（wordClass 之后）
  *      explanation?: string,
- *      wordClass?: string,      // "动词"->"动", "名词"->"名", "形容词"->"形", "副词"->"副"
  *      bookRefs?: Array<{
  *          bookName: string,
  *          content: string,
@@ -21,8 +23,8 @@
  * URL 参数：?keyword=xxx 仅在首次进入时读取一次，之后不再改动地址栏。
  * 展示顺序（按 YAML 注释）：
  *   标题
- *   ├─ wordClass 标签（可选，独立一行）
- *   ├─ explanation（可选，独立一行）
+ *   ├─ pronunciation 标签（可选，独立一行）
+ *   ├─ explanation（可选，独立一行），行首依次放 wordClass 标签、borrowedAs 标签
  *   ├─ bookRefs[]（每行一个，首行前加"援例"标签，格式：content —— 《bookName》）
  *   └─ synonym[]（单行，行首"义近"标签，每个 synonymName 一个标签）
  * 能力角标（bookRefs 行 / synonym 标签通用）：由 preview、link 组合出 4 态，
@@ -164,22 +166,32 @@ const renderSynonymLine = (synonyms, keyword, knownTitles) => {
   return `<div class="dict-synonym-line"><span class="dict-synonym-label">\u4e49\u8fd1</span>${tags}</div>`; // 义近
 };
 
-// 渲染单个 meaning：按顺序输出 wordClass 行、explanation 行、bookRefs 行、synonym 行
+// 渲染单个 meaning：按顺序输出 pronunciation 行、explanation 行（行首含 wordClass/borrowedAs 标签）、bookRefs 行、synonym 行
 // knownTitles 是全量词条标题的 Set，用来判断 synonymName 是否可链接到搜索页
 const renderMeaning = (m, keyword, knownTitles) => {
   const lines = [];
 
-  // 1. 词性标签行（可选，独立一行）
-  if (m.wordClass) {
-    const { tag, text } = wordClassInfo(m.wordClass);
-    if (text) {
-      lines.push(`<div class="dict-wordclass-line"><span class="word-class-tag ${tag}">${text}</span></div>`);
-    }
+  // 1. 读音标签行（可选，独立一行）
+  if (m.pronunciation) {
+    lines.push(`<div class="dict-pronunciation-line"><span class="dict-pronunciation-tag">${highlight(m.pronunciation, keyword)}</span></div>`);
   }
 
-  // 2. 释义行（可选，独立一行）
+  // 2. 释义行（可选，独立一行），行首按顺序放 wordClass 标签、borrowedAs 标签
   if (m.explanation) {
-    lines.push(`<div class="dict-explanation-line">${highlight(m.explanation, keyword)}</div>`);
+    const prefixTags = [];
+    // wordClass 标签
+    if (m.wordClass) {
+      const { tag, text } = wordClassInfo(m.wordClass);
+      if (text) {
+        prefixTags.push(`<span class="word-class-tag ${tag}">${text}</span>`);
+      }
+    }
+    // borrowedAs 标签
+    if (m.borrowedAs) {
+      prefixTags.push(`<span class="dict-borrowed-tag">${highlight(m.borrowedAs, keyword)}</span>`);
+    }
+    const prefixHtml = prefixTags.length ? prefixTags.join('') + ' ' : '';
+    lines.push(`<div class="dict-explanation-line">${prefixHtml}${highlight(m.explanation, keyword)}</div>`);
   }
 
   // 3. 书证/援例行（数组，每行一个，首行加标签）
