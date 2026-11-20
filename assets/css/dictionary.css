@@ -100,12 +100,18 @@
 .word-class-tag--adv  { background: #fff3e0; color: #a86200; }
 .word-class-tag--other { background: #f3efe7; color: #8a7257; }
 
-/* 通假/借字标签（用于 explanation 行首，wordClass 之后） */
+/* 通假/借字标签（用于 explanation 行首，wordClass 之后）：整体为一个标签组件，左侧重点"通"字，右侧字段文本 */
 .dict-borrowed-tag {
   display: inline-block; font-size: .65rem; font-weight: 600;
   padding: .1em .45em; border-radius: 999px;
   vertical-align: middle; line-height: 1;
   background: #f5f0eb; color: #8a7257; border: 1px solid #e8e3d9;
+}
+/* 标签内左侧重点"通"字 */
+.dict-borrowed-tag--first {
+  color: #ba7517; /* 重点色，与预览角标同色系 */
+  font-weight: 700;
+  margin-right: .2em;
 }
 
 /* 书证/援例行容器 */

@@ -5,7 +5,7 @@
  *  - meanings: Array<{
  *      pronunciation?: string,  // 可选，拼音/读音：标签展示在独立一行
  *      wordClass?: string,      // "动词"->"动", "名词"->"名", "形容词"->"形", "副词"->"副"，标签展示在 explanation 行首
- *      borrowedAs?: string,     // 可选，通假/借字：标签展示在 explanation 行首（wordClass 之后）
+ *      borrowedAs?: string,     // 可选，通假/借字：标签展示在 explanation 行首（wordClass 之后），组件内左侧为重点"通"字，右侧为字段文本
  *      explanation?: string,
  *      bookRefs?: Array<{
  *          bookName: string,
@@ -186,9 +186,9 @@ const renderMeaning = (m, keyword, knownTitles) => {
         prefixTags.push(`<span class="word-class-tag ${tag}">${text}</span>`);
       }
     }
-    // borrowedAs 标签
+    // borrowedAs 标签（重点"通"字标签 + 字段文本，整体为一个标签组件）
     if (m.borrowedAs) {
-      prefixTags.push(`<span class="dict-borrowed-tag">${highlight(m.borrowedAs, keyword)}</span>`);
+      prefixTags.push(`<span class="dict-borrowed-tag"><span class="dict-borrowed-tag--first">通</span>${highlight(m.borrowedAs, keyword)}</span>`);
     }
     const prefixHtml = prefixTags.length ? prefixTags.join('') + ' ' : '';
     lines.push(`<div class="dict-explanation-line">${prefixHtml}${highlight(m.explanation, keyword)}</div>`);
