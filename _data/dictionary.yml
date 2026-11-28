@@ -11,6 +11,7 @@
 #   - synonym（可选，同义词数组）：bookRefs 下方展示，单行展示，行首为标签(文本为'义近')
 #       每个元素按顺序展示为标签，文本为 synonymName
 #       如果有 preview 属性，和 bookRefs 的 preview 展示逻辑相同（包含 app 端逻辑）
+#       如果没有 preview，但 synonymName 也是词条，悬浮显示该词条的卡片（卡片内容与网页词条卡片一致，但不带链接与 hover，仅可查看）
 #       另外，如果 synonymName 也是词条，可以作为超链接点击，在新页面将 synonymName 作为 keyword 搜索
 # 新增词条：复制下面任意一项，改掉内容即可；搜索时会匹配 title。
 - title: "臻"
@@ -30,13 +31,13 @@
   meanings:
     - explanation: 本意，草席
       pronunciation: jiàn
-      borrowedAs: 通假
       wordClass: 名词
       bookRefs:
         - bookName: 说文
           content: 凡亲地者谓之筵，加于筵者谓之席。席即因也，重于筵也。
     - explanation: 再，重，接连，因为席加于筵之上，所以引申出重的意思
       wordClass: 副词
+      borrowedAs: 洊
       bookRefs:
         - bookName: 国语·鲁语上
           content: 饥馑荐降
@@ -52,7 +53,6 @@
         - synonymName: 享
           preview: 献食曰享
         - synonymName: 臻
-          preview: 测试用
     - explanation: 推荐人才，介绍，即所献之物为人
       wordClass: 动词
       bookRefs:

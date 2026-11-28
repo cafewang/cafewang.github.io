@@ -187,6 +187,24 @@
   color: #8a8175; font-size: .75rem;
 }
 
+/* ===== 只读词条卡片浮层 ===== */
+/* synonym 无 preview 且命中词条时，浮层里展示该词条的只读卡片。
+   排版沿用网页卡片，但纯查看：无链接、无 hover 反馈、无手型指针。
+   （浮层本身 pointer-events:none，这里再显式关掉交互样式，确保「仅可查看」。） */
+.dict-entry-card .dict-entry { padding: 0; border: none; }
+.dict-entry-card .dict-entry-title { font-size: 1.05rem; margin-bottom: .2em; }
+.dict-entry-card .dict-meaning { margin-top: .45em; padding-bottom: .45em; }
+.dict-entry-card .dict-bookref-line,
+.dict-entry-card .dict-synonym-tag {
+  cursor: default;
+  text-decoration: none;
+}
+.dict-entry-card .dict-bookref-line:hover,
+.dict-entry-card .dict-synonym-tag:hover {
+  background: transparent;
+  color: inherit;
+}
+
 /* ===== 能力角标：圆圈 i = 可预览，外链箭头 = 可跳转（书证行与同义词标签共用） ===== */
 .dict-cap-icon {
   display: inline-block; box-sizing: border-box;

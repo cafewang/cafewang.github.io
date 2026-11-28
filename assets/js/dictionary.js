@@ -16,7 +16,9 @@
  *      synonym?: Array<{       // 同义词，bookRefs 下方单行展示，行首"义近"标签
  *          synonymName: string,
  *          preview?: string    // 同 bookRefs.preview（含触屏浮层逻辑）
- *      }>                     // synonymName 命中已有词条时，新页面打开 ?keyword=xxx
+ *      }>                     // synonymName 命中已有词条时：有 preview 则浮层展示 preview；
+ *                             // 无 preview 则浮层展示该词条的只读卡片（卡片内无链接与 hover）；
+ *                             // 点击始终在新页面打开 ?keyword=xxx 搜索
  *    }>
  *  - tags?: string[]
  * 搜索：仅匹配 title（按需求）
@@ -29,6 +31,9 @@
  *   └─ synonym[]（单行，行首"义近"标签，每个 synonymName 一个标签）
  * 能力角标（bookRefs 行 / synonym 标签通用）：由 preview、link 组合出 4 态，
  *   写 data-capability='preview'|'link'|'both'，行尾显示圆圈 i（可预览）/ 外链箭头（可跳转）。
+ *   synonym 无 preview 但命中词条时，「查看词条卡片」按 preview 态处理（圆圈 i）。
+ * 只读卡片：浮层里的词条卡片由 readonly 模式渲染，复用网页卡片的排版，但不写任何
+ *   data-preview / data-capability 属性、不生成链接、不显示角标，仅可查看。
  */
 
 // 防 XSS
@@ -94,14 +99,16 @@ const capabilityMarkup = (hasPreview, hasLink) => {
 // 渲染单个 bookRef 行
 // preview 不再作为行内 <span> 插入：absolute 且未指定偏移时只会停在静态位置（行尾右下角）。
 // 改为把 HTML 片段转义后存入 data-preview，由全局浮层读取并跟随鼠标展示。
-const renderBookRefLine = (ref, keyword, isFirst) => {
+// readonly=true（浮层里的只读卡片）不写任何链接/浮层属性/角标，仅保留排版。
+const renderBookRefLine = (ref, keyword, isFirst, readonly = false) => {
   const content = highlight(ref.content, keyword);
   const bookName = highlight(ref.bookName, keyword);
   // 格式：content —— 《bookName》
   const lineText = `${content} \u2014\u2014 \u300a${bookName}\u300b`;
 
-  const hasLink = ref.link && ref.link.trim();
-  const hasPreview = ref.preview && ref.preview.trim();
+  // readonly 下把所有交互能力关掉，避免只读卡片里再次出现可点/可悬浮的元素
+  const hasLink = !readonly && ref.link && ref.link.trim();
+  const hasPreview = !readonly && ref.preview && ref.preview.trim();
 
   const cls = ['dict-bookref-line',
     hasLink ? 'dict-bookref-line--link' : '',
@@ -133,26 +140,36 @@ const renderBookRefLine = (ref, keyword, isFirst) => {
 
 // 同义词行：bookRefs 下方单行展示，行首「义近」标签，之后按数组顺序排 synonymName 标签。
 // - 带 preview：写 data-preview，复用书证行的全局浮层（鼠标跟随 + 触屏两段式，含 app 端逻辑）。
+// - 无 preview 但 synonymName 命中已有词条：写该词条的**只读卡片**到 data-preview，
+//   复用同一个浮层即可悬浮查看；卡片内无链接与 hover，仅可查看。
 // - synonymName 命中已有词条：生成 ?keyword=xxx 链接，target="_blank" 在新页面直达搜索结果。
 //   用相对查询串可自动沿用当前词典页路径（含 baseurl），无需读 location。
-const renderSynonymLine = (synonyms, keyword, knownTitles) => {
+// entriesByTitle: title -> entry 的 Map，用来取词条数据生成只读卡片；readonly=true 时不产生任何交互。
+const renderSynonymLine = (synonyms, keyword, knownTitles, entriesByTitle, readonly = false) => {
   const tags = (synonyms ?? []).map((s) => {
     const name = String(s?.synonymName ?? '').trim();
     if (!name) return '';
 
-    const hasPreview = s.preview && String(s.preview).trim();
-    const isEntry = !!knownTitles && knownTitles.has(name);
+    const hasPreview = !readonly && !!(s.preview && String(s.preview).trim());
+    const isEntry = !readonly && !!knownTitles && knownTitles.has(name);
+    // 无 preview 且命中词条 => 浮层展示该词条的只读卡片，与 preview 共用 data-preview 通道
+    const entry = !readonly && !hasPreview && isEntry && entriesByTitle
+      ? entriesByTitle.get(name)
+      : null;
+    const cardHtml = entry ? renderEntryReadonly(entry, name) : '';
+    const canPreview = hasPreview || !!cardHtml;
+
     const cls = ['dict-synonym-tag',
-      hasPreview ? 'dict-synonym-tag--preview' : '',
+      canPreview ? 'dict-synonym-tag--preview' : '',
       isEntry ? 'dict-synonym-tag--link' : ''
     ].join(' ').trim();
-    const previewAttr = hasPreview
-      ? ` data-preview="${escapeHtml(s.preview)}"`
+    const previewAttr = canPreview
+      ? ` data-preview="${escapeHtml(hasPreview ? s.preview : cardHtml)}"`
       : '';
-    // 同义词命中已有词条 => 可跳转；与 preview 组合出四态，和书证行用同一套 capability/角标
-    const capability = capabilityOf(hasPreview, isEntry);
+    // 可查看（preview 或只读卡片）+ 可跳转，组合出四态，和书证行用同一套 capability/角标
+    const capability = capabilityOf(canPreview, isEntry);
     const capAttr = capability ? ` data-capability="${capability}"` : '';
-    const cap = capabilityMarkup(hasPreview, isEntry);
+    const cap = capabilityMarkup(canPreview, isEntry);
     const text = highlight(name, keyword);
 
     if (isEntry) {
@@ -168,7 +185,8 @@ const renderSynonymLine = (synonyms, keyword, knownTitles) => {
 
 // 渲染单个 meaning：按顺序输出 pronunciation 行、explanation 行（行首含 wordClass/borrowedAs 标签）、bookRefs 行、synonym 行
 // knownTitles 是全量词条标题的 Set，用来判断 synonymName 是否可链接到搜索页
-const renderMeaning = (m, keyword, knownTitles) => {
+// readonly=true 时所有子行都关闭交互，用于浮层里的只读卡片
+const renderMeaning = (m, keyword, knownTitles, entriesByTitle, readonly = false) => {
   const lines = [];
 
   // 1. 读音标签行（可选，独立一行）
@@ -196,35 +214,41 @@ const renderMeaning = (m, keyword, knownTitles) => {
 
   // 3. 书证/援例行（数组，每行一个，首行加标签）
   if (m.bookRefs?.length) {
-    const refsHtml = m.bookRefs.map((r, i) => renderBookRefLine(r, keyword, i === 0)).join('');
+    const refsHtml = m.bookRefs.map((r, i) => renderBookRefLine(r, keyword, i === 0, readonly)).join('');
     lines.push(`<div class="dict-bookrefs-lines">${refsHtml}</div>`);
   }
 
   // 4. 同义词行（数组，单行「义近」+ 若干标签）
   if (m.synonym?.length) {
-    const synonymHtml = renderSynonymLine(m.synonym, keyword, knownTitles);
+    const synonymHtml = renderSynonymLine(m.synonym, keyword, knownTitles, entriesByTitle, readonly);
     if (synonymHtml) lines.push(synonymHtml);
   }
 
   return `<div class="dict-meaning">${lines.join('')}</div>`;
 };
 
-// 渲染单个词条
-const renderEntry = (entry, keyword, knownTitles) => {
+// 渲染单个词条；readonly=true 时整张卡片不带任何交互（浮层里用 div 而非 li）
+const renderEntry = (entry, keyword, knownTitles, entriesByTitle, readonly = false) => {
   const title = highlight(entry.title, keyword);
-  const meaningsHtml = (entry.meanings ?? []).map((m) => renderMeaning(m, keyword, knownTitles)).join('');
+  const meaningsHtml = (entry.meanings ?? []).map((m) => renderMeaning(m, keyword, knownTitles, entriesByTitle, readonly)).join('');
 
   const tagsHtml = entry.tags?.length
     ? `<div class="dict-tags">${entry.tags.map((t) => `<span class="dict-tag">${escapeHtml(t)}</span>`).join('')}</div>`
     : '';
 
+  const tag = readonly ? 'div' : 'li';
   return `
-    <li class="dict-entry">
+    <${tag} class="dict-entry">
       <div class="dict-entry-title">${title}</div>
       ${meaningsHtml}
       ${tagsHtml}
-    </li>`;
+    </${tag}>`;
 };
+
+// 只读词条卡片：与网页卡片共用整套渲染链路，只把交互全部关掉。
+// 用于 synonym 无 preview 且命中词条时的悬浮查看；keyword 传 synonymName，便于在卡片中对照。
+const renderEntryReadonly = (entry, keyword) =>
+  `<div class="dict-entry-card">${renderEntry(entry, keyword, null, null, true)}</div>`;
 
 // 搜索：仅按 title 匹配（按需求）
 const searchEntries = (entries, keyword) => {
@@ -242,9 +266,13 @@ const render = (entries, keyword, resultsEl, countEl) => {
   const knownTitles = new Set(
     (entries ?? []).map((e) => String(e.title ?? '').trim()).filter(Boolean)
   );
+  // title -> entry，供「无 preview 但命中词条」时取词条数据生成悬浮只读卡片
+  const entriesByTitle = new Map(
+    (entries ?? []).map((e) => [String(e.title ?? '').trim(), e]).filter(([t]) => t)
+  );
   countEl.textContent = list.length ? `\u5171 ${list.length} \u6761\u7ed3\u679c` : '';
   resultsEl.innerHTML = list.length
-    ? list.map((e) => renderEntry(e, keyword, knownTitles)).join('')
+    ? list.map((e) => renderEntry(e, keyword, knownTitles, entriesByTitle)).join('')
     : '<li class="dict-empty">\u6ca1\u6709\u627e\u5230\u5339\u914d\u7684\u8bcd\u6761\u3002</li>';
 };
 
@@ -643,5 +671,5 @@ if (document.readyState === 'loading') {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { escapeHtml, escapeRegExp, highlight, wordClassInfo, capabilityOf, capabilityMarkup, renderBookRefLine, renderSynonymLine, renderMeaning, renderEntry, searchEntries, render, shuffle, pickCloudWords, buildCloudSlots, renderWordCloud, createPreviewController, readKeywordFromUrl, initDictionary };
+  module.exports = { escapeHtml, escapeRegExp, highlight, wordClassInfo, capabilityOf, capabilityMarkup, renderBookRefLine, renderSynonymLine, renderMeaning, renderEntry, renderEntryReadonly, searchEntries, render, shuffle, pickCloudWords, buildCloudSlots, renderWordCloud, createPreviewController, readKeywordFromUrl, initDictionary };
 }
